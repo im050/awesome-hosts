@@ -16,6 +16,12 @@ type Notice struct {
 	ReturnURL string
 }
 
+type RespEntity struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
 func IndexController(w http.ResponseWriter, r *http.Request) {
 	store, err := session.Start(context.Background(), w, r)
 	checkError(err)
@@ -62,12 +68,19 @@ func LogoutController(w http.ResponseWriter, r *http.Request) {
 }
 
 func CurrentController(w http.ResponseWriter, r *http.Request) {
-	jsonText, _ := json.Marshal(hosts)
-	jsonResponse(w, string(jsonText))
+	store, err := session.Start(context.Background(), w, r)
+	checkError(err)
+	if !checkAccess(store) {
+		jsonResponse(w, RespEntity{403, "无权访问", nil})
+		return
+	}
+	jsonResponse(w, RespEntity{1, "success", hosts})
 }
 
-func jsonResponse(w http.ResponseWriter, str string) {
+func jsonResponse(w http.ResponseWriter, response RespEntity) {
 	w.Header().Set("Content-type", "text/json; charset=UTF-8")
+	jsonText, _ := json.Marshal(response)
+	str := string(jsonText)
 	fmt.Fprint(w, str)
 }
 
