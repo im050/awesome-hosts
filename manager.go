@@ -22,8 +22,9 @@ func GetCurrentHosts(file *os.File) []Host {
 			continue
 		}
 		//if notice, continue
+		enabled := true
 		if strings.Index(lineString, "#") == 0 {
-			continue
+			enabled = false
 		}
 		reg := regexp.MustCompile(`[\s+|\t+]`)
 		hostSplit := reg.Split(lineString, -1)
@@ -31,9 +32,19 @@ func GetCurrentHosts(file *os.File) []Host {
 		if len(hostSplit) < 2 {
 			continue
 		}
+		if !enabled {
+			hostSplit[0] = strings.TrimSpace(strings.TrimLeft(hostSplit[0], "#"))
+		}
+		IPv4Pattern := `((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)`
+		IPv6Pattern := `(([\da-fA-F]{1,4}):){8}`
+		//if not ip, continue
+		if !regexp.MustCompile(IPv4Pattern).MatchString(hostSplit[0]) && !regexp.MustCompile(IPv6Pattern).MatchString(hostSplit[0]) {
+			continue
+		}
 		hosts = append(hosts, Host{
-			Domain: hostSplit[0],
-			IP:     hostSplit[1],
+			Domain:  hostSplit[0],
+			IP:      hostSplit[1],
+			Enabled: enabled,
 		})
 	}
 	return hosts
