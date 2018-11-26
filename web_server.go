@@ -11,16 +11,15 @@ import (
 )
 
 type Notice struct {
-	Message string
-	Type bool
+	Message   string
+	Type      bool
 	ReturnURL string
 }
 
 func IndexController(w http.ResponseWriter, r *http.Request) {
 	store, err := session.Start(context.Background(), w, r)
 	checkError(err)
-	access, has := store.Get("access")
-	if !has || access != true {
+	if !checkAccess(store) {
 		http.Redirect(w, r, "/login", http.StatusMovedPermanently)
 		return
 	}
@@ -29,14 +28,9 @@ func IndexController(w http.ResponseWriter, r *http.Request) {
 
 func LoginController(w http.ResponseWriter, r *http.Request) {
 	store, err := session.Start(context.Background(), w, r)
-	res, has := store.Get("access")
-	if has && res == true {
+	checkError(err)
+	if checkAccess(store) {
 		http.Redirect(w, r, "/index", http.StatusMovedPermanently)
-		return
-	}
-	if err != nil {
-		fmt.Fprint(os.Stdout, err)
-		displayTemplate(w, "notice.html", Notice{"Something wrong", false, ""})
 		return
 	}
 	if r.Method == "GET" {
@@ -60,6 +54,13 @@ func LoginController(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func LogoutController(w http.ResponseWriter, r *http.Request) {
+	store, err := session.Start(context.Background(), w, r)
+	checkError(err)
+	checkError(store.Flush())
+	http.Redirect(w, r, "/login", http.StatusMovedPermanently)
+}
+
 func CurrentController(w http.ResponseWriter, r *http.Request) {
 	jsonText, _ := json.Marshal(hosts)
 	jsonResponse(w, string(jsonText))
@@ -75,11 +76,21 @@ func displayTemplate(w http.ResponseWriter, templateName string, data interface{
 	checkError(tmpl.Execute(w, data))
 }
 
+func checkAccess(store session.Store) bool {
+	access, has := store.Get("access")
+	if !has || access != true {
+		return false
+	}
+	return true
+}
+
 func ServerStart() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/", IndexController)
 	http.HandleFunc("/current", CurrentController)
 	http.HandleFunc("/login", LoginController)
+	http.HandleFunc("/logout", LogoutController)
+	fmt.Println("starting...")
 	err := http.ListenAndServe("0.0.0.0:8000", nil)
 	checkError(err)
 }
