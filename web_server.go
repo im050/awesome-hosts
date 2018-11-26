@@ -6,16 +6,19 @@ import (
 	"fmt"
 	"github.com/go-session/session"
 	"html/template"
+	"net"
 	"net/http"
 	"os"
 )
 
+// for display notice template
 type Notice struct {
 	Message   string
 	Type      bool
 	ReturnURL string
 }
 
+// for json response
 type RespEntity struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
@@ -77,6 +80,7 @@ func CurrentController(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, RespEntity{1, "success", hosts})
 }
 
+//quick json response
 func jsonResponse(w http.ResponseWriter, response RespEntity) {
 	w.Header().Set("Content-type", "text/json; charset=UTF-8")
 	jsonText, _ := json.Marshal(response)
@@ -84,12 +88,15 @@ func jsonResponse(w http.ResponseWriter, response RespEntity) {
 	fmt.Fprint(w, str)
 }
 
+//display html template
 func displayTemplate(w http.ResponseWriter, templateName string, data interface{}) {
 	tmpl := template.Must(template.ParseFiles("template/" + templateName))
 	checkError(tmpl.Execute(w, data))
 }
 
+//check role access token
 func checkAccess(store session.Store) bool {
+	return true
 	access, has := store.Get("access")
 	if !has || access != true {
 		return false
@@ -97,13 +104,15 @@ func checkAccess(store session.Store) bool {
 	return true
 }
 
+//run the http server
 func ServerStart() {
+	ln, _ = net.Listen("tcp", "127.0.0.1:0")
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/", IndexController)
 	http.HandleFunc("/current", CurrentController)
 	http.HandleFunc("/login", LoginController)
 	http.HandleFunc("/logout", LogoutController)
-	fmt.Println("starting...")
-	err := http.ListenAndServe("0.0.0.0:8000", nil)
-	checkError(err)
+	go func() {
+		checkError(http.Serve(ln, nil))
+	}()
 }

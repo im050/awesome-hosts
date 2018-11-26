@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -26,7 +27,8 @@ func GetCurrentHosts(file *os.File) []Host {
 		if strings.Index(lineString, "#") == 0 {
 			enabled = false
 		}
-		reg := regexp.MustCompile(`[\s+|\t+]`)
+		lineString = regexp.MustCompile(`\t+`).ReplaceAllLiteralString(lineString, " ")
+		reg := regexp.MustCompile(`\s+`)
 		hostSplit := reg.Split(lineString, -1)
 		//if domain nonexistent, continue
 		if len(hostSplit) < 2 {
@@ -41,9 +43,10 @@ func GetCurrentHosts(file *os.File) []Host {
 		if !regexp.MustCompile(IPv4Pattern).MatchString(hostSplit[0]) && !regexp.MustCompile(IPv6Pattern).MatchString(hostSplit[0]) {
 			continue
 		}
+		fmt.Println(hostSplit)
 		hosts = append(hosts, Host{
-			Domain:  hostSplit[0],
-			IP:      hostSplit[1],
+			Domain:  hostSplit[1],
+			IP:      hostSplit[0],
 			Enabled: enabled,
 		})
 	}
