@@ -11,23 +11,28 @@ Server.prototype.sendMessage = function(name, payload, callback) {
 };
 
 (function () {
+    let server = new Server();
     let app = new Vue({
         el: '#app',
         data: {
-            sites: [
-                { name: 'Runoob' },
-                { name: 'Google' },
-                { name: 'Taobao' }
-            ]
+            systemHosts: []
+        },
+        methods: {
+            initSystemHosts: function() {
+                console.log("no problem");
+                let _this = this;
+                server.sendMessage("list", {}, function(message) {
+                    console.log("收到消息了");
+                    _this.systemHosts =  message.payload;
+                    // let html = "";
+                    // for (let i in data) {
+                    //     let item = data[i];
+                    //     html += "<tr><th scope=\"row\">"+(parseInt(i)+1)+"</th><td>"+item.ip+"</td><td>"+item.domain+"</td><td>"+item.enabled+"</td></tr>";
+                    // }
+                    // document
+                })
+            }
         }
-    })
-    let server = new Server();
-    server.sendMessage("list", {}, function(message) {
-        let data = message.payload;
-        for (let i in data) {
-            let item = data[i];
-            let html = "<tr><th scope=\"row\">"+(parseInt(i)+1)+"</th><td>"+item.ip+"</td><td>"+item.domain+"</td><td>"+item.enabled+"</td></tr>";
-            $("#host-list").append(html)
-        }
-    })
+    });
+    app.initSystemHosts();
 })();

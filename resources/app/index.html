@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>HostManager</title>
-    <script src="static/js/base.js"></script>
     <link href="static/css/bootstrap-4.1.3.min.css" rel="stylesheet">
-    <link href="static/css/font-awesome-4.7.0.min.css" rel="stylesheet">
     <link href="static/css/app.css" rel="stylesheet">
-    <script src="https://cdn.bootcss.com/vue/2.5.17/vue.min.js"></script>
+    <link rel="stylesheet" href="static/lib/font-awesome-4.7.0/css/font-awesome.min.css">
 </head>
 <body>
 <div class="container-fluid framework" id="app">
@@ -25,19 +23,24 @@
                 <table class="table table-dark">
                     <thead>
                     <tr>
-                        <th scope="col">#</th>
                         <th scope="col">IP</th>
                         <th scope="col">Domain</th>
                         <th scope="col">Enabled</th>
                     </tr>
                     </thead>
                     <tbody id="host-list">
-
+                        <tr v-for="item in systemHosts">
+                            <td>{{ item.ip }}</td>
+                            <td>{{ item.ip }}</td>
+                            <td>{{ item.enabled }}</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </main>
     </div>
 </div>
+<script src="static/js/vue-2.5.17.min.js"></script>
+<script src="static/js/base.js"></script>
 </body>
 </html>
