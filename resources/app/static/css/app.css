@@ -1,0 +1,67 @@
+html, body {
+    background: rgb(32, 34, 46);
+}
+html, body, .framework, .framework>.row {
+    height: 100%;
+}
+.bd-sidebar {
+    background: rgb(32, 34, 46);
+    border-right: 1px solid rgb(23, 26, 35);
+    min-height: 600px;
+    height: 100%;
+}
+.bd-content {
+    min-height: 600px;
+    background: rgb(41, 43, 55);
+    border-left: 1px solid rgb(45, 47, 57);
+    border-top: 1px solid rgb(45, 47, 57);
+    height: 100%;
+}
+.top-bar {
+    background: rgb(30, 37, 45);
+    border-bottom: 1px solid rgb(23, 26, 35);
+    height: 50px;
+    margin-left: -16px;
+    margin-right: -15px;
+}
+.list {
+    color: #999;
+    list-style: none;
+    margin: 50px -15px 0 -15px;
+    padding: 0;
+    border-top: 1px solid rgb(23, 26, 35);
+    border-bottom: 1px solid rgb(45, 47, 57);
+}
+.list li {
+    padding: 0 15px 0 15px;
+    border-top: 1px solid rgb(45, 47, 57);
+    border-bottom: 1px solid rgb(23, 26, 35);
+    height: 36px;
+    font-size: 12px;
+    line-height: 36px;
+    cursor: pointer;
+    -webkit-transition: all ease .2s ;
+    -moz-transition: all ease .2s;
+    -ms-transition: all ease .2s;
+    -o-transition: all ease .2s;
+    transition: all ease .2s;
+}
+.list li:hover, .list li.current {
+    color: #fff;
+    background: rgb(23, 26, 35);
+    -webkit-transition: all ease .2s ;
+    -moz-transition: all ease .2s;
+    -ms-transition: all ease .2s;
+    -o-transition: all ease .2s;
+    transition: all ease .2s;
+}
+.list li .fa {
+    margin-right: 5px;
+}
+.list-view {
+    height: calc(100% - 50px);
+    overflow: auto;
+}
+.list-view table {
+    font-size: 12px;
+}

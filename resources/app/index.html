@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HostManager</title>
+    <script src="static/js/base.js"></script>
+    <link href="static/css/bootstrap-4.1.3.min.css" rel="stylesheet">
+    <link href="static/css/font-awesome-4.7.0.min.css" rel="stylesheet">
+    <link href="static/css/app.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/vue/2.5.17/vue.min.js"></script>
+</head>
+<body>
+<div class="container-fluid framework" id="app">
+    <div class="row flex-xl-nowrap">
+        <div class="col-12 col-md-3 col-xl-2 bd-sidebar">
+            <ul class="list">
+                <li class="current"><i class="fa fa-list-ul fa-lg"></i> 正在使用</li>
+                <li><i class="fa fa-list-ul fa-lg"></i> 测试环境</li>
+                <li><i class="fa fa-list-ul fa-lg"></i> 预发布环境</li>
+            </ul>
+        </div>
+        <main class="col-12 col-md-9 col-xl-8 bd-content" role="main">
+            <div class="top-bar"></div>
+            <div class="row list-view">
+                <table class="table table-dark">
+                    <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">IP</th>
+                        <th scope="col">Domain</th>
+                        <th scope="col">Enabled</th>
+                    </tr>
+                    </thead>
+                    <tbody id="host-list">
+
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>
