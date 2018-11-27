@@ -35,4 +35,5 @@ Server.prototype.sendMessage = function(name, payload, callback) {
         }
     });
     app.initSystemHosts();
+    var myScroll = new IScroll('#scroll-wrapper');
 })();

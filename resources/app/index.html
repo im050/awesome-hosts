@@ -20,26 +20,29 @@
         <main class="col-12 col-md-9 col-xl-8 bd-content" role="main">
             <div class="top-bar"></div>
             <div class="row list-view">
-                <table class="table table-dark">
-                    <thead>
-                    <tr>
-                        <th scope="col">IP</th>
-                        <th scope="col">Domain</th>
-                        <th scope="col">Enabled</th>
-                    </tr>
-                    </thead>
-                    <tbody id="host-list">
-                        <tr v-for="item in systemHosts">
-                            <td>{{ item.ip }}</td>
-                            <td>{{ item.ip }}</td>
-                            <td>{{ item.enabled }}</td>
+                <div class="scroll-wrapper" id="scroll-wrapper">
+                    <table class="table table-dark">
+                        <thead>
+                        <tr>
+                            <th scope="col">IP</th>
+                            <th scope="col">Domain</th>
+                            <th scope="col">Enabled</th>
                         </tr>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody id="host-list">
+                            <tr v-for="item in systemHosts">
+                                <td>{{ item.ip }}</td>
+                                <td>{{ item.ip }}</td>
+                                <td>{{ item.enabled }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
 </div>
+<script src="https://cdn.bootcss.com/iScroll/5.2.0/iscroll.min.js"></script>
 <script src="static/js/vue-2.5.17.min.js"></script>
 <script src="static/js/base.js"></script>
 </body>
