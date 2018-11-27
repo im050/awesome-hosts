@@ -6,6 +6,7 @@
     <link href="static/css/bootstrap-4.1.3.min.css" rel="stylesheet">
     <link href="static/css/app.css" rel="stylesheet">
     <link rel="stylesheet" href="static/lib/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/vuescroll/dist/vuescroll.css" />
 </head>
 <body>
 <div class="container-fluid framework" id="app">
@@ -20,7 +21,8 @@
         <main class="col-12 col-md-9 col-xl-8 bd-content" role="main">
             <div class="top-bar"></div>
             <div class="row list-view">
-                <div class="scroll-wrapper" id="scroll-wrapper">
+                <vue-scroll :ops="ops">
+                    <div class="wrapper">
                     <table class="table table-dark">
                         <thead>
                         <tr>
@@ -32,18 +34,24 @@
                         <tbody id="host-list">
                             <tr v-for="item in systemHosts">
                                 <td>{{ item.ip }}</td>
-                                <td>{{ item.ip }}</td>
+                                <td>{{ item.domain }}</td>
                                 <td>{{ item.enabled }}</td>
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                    </div>
+                </vue-scroll>
             </div>
         </main>
     </div>
 </div>
-<script src="https://cdn.bootcss.com/iScroll/5.2.0/iscroll.min.js"></script>
 <script src="static/js/vue-2.5.17.min.js"></script>
+<script src="static/js/vue-scroll-2.1.9.min.js"></script>
 <script src="static/js/base.js"></script>
+<script src="https://unpkg.com/vuescroll"></script>
+<!-- 引入vuescroll-slide -->
+<script src="https://unpkg.com/vuescroll/dist/vuescroll-slide.js"></script>
+<!-- 引入vuescroll-native -->
+<script src="https://unpkg.com/vuescroll/dist/vuescroll-native.js"></script>
 </body>
 </html>

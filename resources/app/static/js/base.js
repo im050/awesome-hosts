@@ -15,7 +15,19 @@ Server.prototype.sendMessage = function(name, payload, callback) {
     let app = new Vue({
         el: '#app',
         data: {
-            systemHosts: []
+            systemHosts: [],
+            ops: {
+                vuescroll: {
+                    mode: 'slide',
+                    sizeStrategy: 'number',
+                    /** Whether to detect dom resize or not */
+                    detectResize: false
+                },
+                bar: {
+                    background: '#ffffff',
+                    opacity: 0.5,
+                }
+            }
         },
         methods: {
             initSystemHosts: function() {
@@ -35,5 +47,4 @@ Server.prototype.sendMessage = function(name, payload, callback) {
         }
     });
     app.initSystemHosts();
-    var myScroll = new IScroll('#scroll-wrapper');
 })();
