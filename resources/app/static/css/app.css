@@ -1,55 +1,109 @@
 html, body {
     background: rgb(32, 34, 46);
+    font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 }
 html, body, .framework, .framework>.row {
     height: 100%;
 }
-.bd-sidebar {
-    background: rgb(32, 34, 46);
-    border-right: 1px solid rgb(23, 26, 35);
-    min-height: 600px;
+#app>.el-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
 }
-.bd-content {
-    min-height: 600px;
+.el-aside {
+    background: rgb(45, 62, 80);
+    height: 100%;
+}
+.el-main {
     background: rgb(41, 43, 55);
-    border-left: 1px solid rgb(45, 47, 57);
-    border-top: 1px solid rgb(45, 47, 57);
-    height: 100%;
+    height: calc(100% - 60px);
     position: relative;
+    padding: 0px;
 }
-.top-bar {
-    background: rgb(30, 37, 45);
-    border-bottom: 1px solid rgb(23, 26, 35);
-    height: 50px;
-    margin-left: -16px;
-    margin-right: -15px;
+.el-header {
+    background: rgb(243, 243, 243);
+    border-bottom: 1px solid rgb(226, 226, 226);
+    box-sizing: border-box;
 }
+
+/*.el-table {*/
+    /*background: rgb(150, 166, 166);*/
+/*}*/
+
+.el-table--border, .el-table--group {
+    border: none;
+}
+/*.el-table th, .el-table tr {*/
+    /*background: rgb(150, 166, 166);*/
+/*}*/
+.el-table--border th {
+    background: rgb(250, 250, 250);
+}
+/*.el-table--border td, .el-table--border th, .el-table__body-wrapper .el-table--border.is-scrolling-left~.el-table__fixed {*/
+    /*border-right: 1px solid rgb(164, 175, 175);*/
+    /*color: #fff;*/
+/*}*/
+/*.el-table td, .el-table th.is-leaf {*/
+    /*border-bottom: 1px solid rgb(164, 175, 175);*/
+/*}*/
+/*.el-table--border::after, .el-table--group::after, .el-table::before {*/
+    /*background-color: rgb(164, 175, 175);*/
+/*}*/
+
+/*.el-table--enable-row-hover .el-table__body tr:hover>td {*/
+    /*background-color: rgb(110, 132, 136);*/
+    /*color: #fff;*/
+    /*transition: background-color,color .25s ease;*/
+/*}*/
+
+.el-table--enable-row-transition .el-table__body td {
+    -webkit-transition: all .25s ease;
+    transition: all .25s ease;
+}
+td .edit-column {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+td .col-split {
+    margin: 0 5px 0 5px;
+}
+td.el-table_1_column_4 i {
+    cursor: pointer;
+}
+
 .list {
     color: #999;
     list-style: none;
-    margin: 50px -15px 0 -15px;
+    margin: 59px 0px 0px 0px;
     padding: 0;
-    border-top: 1px solid rgb(23, 26, 35);
-    border-bottom: 1px solid rgb(45, 47, 57);
 }
 .list li {
+    width: 100%;
+    box-sizing: border-box;
+    float: left;
     padding: 0 15px 0 15px;
-    border-top: 1px solid rgb(45, 47, 57);
-    border-bottom: 1px solid rgb(23, 26, 35);
-    height: 36px;
+    height: 32px;
     font-size: 12px;
-    line-height: 36px;
+    line-height: 32px;
     cursor: pointer;
+    position: relative;
     -webkit-transition: all ease .2s ;
     -moz-transition: all ease .2s;
     -ms-transition: all ease .2s;
     -o-transition: all ease .2s;
     transition: all ease .2s;
 }
+.list li span.checkbox {
+    float:right;
+}
 .list li:hover, .list li.current {
     color: #fff;
-    background: rgb(23, 26, 35);
+    background: rgb(52, 73, 94);
     -webkit-transition: all ease .2s ;
     -moz-transition: all ease .2s;
     -ms-transition: all ease .2s;
@@ -58,6 +112,7 @@ html, body, .framework, .framework>.row {
 }
 .list li .fa {
     margin-right: 5px;
+    transform: scale(0.6);
 }
 .list-view {
     width: 100%;
@@ -68,13 +123,15 @@ html, body, .framework, .framework>.row {
     bottom: 0;
 }
 .list-view table {
-    font-size: 12px;
+    background: #000;
 }
 
 .wrapper {
     width: 100%;
     height: 100%;
 }
-vue-scroll {
-    width: 100%;
+
+.search {
+    width: 300px;
+    padding: 10px 0 10px 0;
 }

@@ -15,7 +15,11 @@ Server.prototype.sendMessage = function(name, payload, callback) {
     let app = new Vue({
         el: '#app',
         data: {
-            systemHosts: [],
+            systemHosts: [{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true}],
+            systemHostsLoading: false,
+            checked: true,
+            checked2: false,
+            input5: '',
             ops: {
                 vuescroll: {
                     mode: 'slide',
@@ -30,12 +34,35 @@ Server.prototype.sendMessage = function(name, payload, callback) {
             }
         },
         methods: {
+            changeTest: function(value) {
+                if (value) {
+                    this.$message({
+                        message: '启用分组成功',
+                        type: 'success'
+                    });
+                } else {
+                    this.$message({
+                        message: '关闭分组成功',
+                        type: 'info'
+                    });
+                }
+            },
             initSystemHosts: function() {
+                this.$notify({
+                    title: '提示',
+                    message: '左侧分组可通过点击复选框快速启用及关闭哦~',
+                    position: 'top-left'
+                });
                 console.log("no problem");
                 let _this = this;
                 server.sendMessage("list", {}, function(message) {
-                    console.log("收到消息了");
                     _this.systemHosts =  message.payload;
+                    let t = _this;
+                    setTimeout(() => {
+                        t.systemHostsLoading = false;
+                    }, 500);
+
+                    //
                     // let html = "";
                     // for (let i in data) {
                     //     let item = data[i];

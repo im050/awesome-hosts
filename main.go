@@ -8,29 +8,27 @@ import (
 	"github.com/asticode/go-astilectron-bootstrap"
 	"github.com/asticode/go-astilog"
 	"github.com/pkg/errors"
+	"host-manager/manager"
+	"log"
 	"os"
-	"runtime"
-)
-
-// Vars
-var (
-	AppName string
-	BuiltAt string
-	debug   = flag.Bool("d", false, "enables the debug mode")
-	w       *astilectron.Window
+	"path/filepath"
+	"strings"
 )
 
 func main() {
-	file, err := os.Open(getHostsFile())
-	go func() {
-		fmt.Println("加载当前hosts")
-		hosts = GetCurrentHosts(file)
-	}()
+	//init manager instance
+	m = manager.New(getCurrentDirectory())
+	//open hosts file
+	file, err := os.Open(manager.GetHostsFile())
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-	defer file.Close()
+	//load hosts
+	go func() {
+		hosts = m.GetHosts(file)
+		m.WriteHosts("默认文件", hosts)
+	}()
 	// Init
 	flag.Parse()
 	astilog.FlagInit()
@@ -53,12 +51,22 @@ func main() {
 				BackgroundColor: astilectron.PtrStr("#333"),
 				Center:          astilectron.PtrBool(true),
 				Height:          astilectron.PtrInt(650),
-				Width:           astilectron.PtrInt(850),
+				Width:           astilectron.PtrInt(950),
+				MinHeight:       astilectron.PtrInt(650),
+				MinWidth:        astilectron.PtrInt(950),
 			},
 		}},
 	}); err != nil {
 		astilog.Fatal(errors.Wrap(err, "running bootstrap failed"))
 	}
+}
+
+func getCurrentDirectory() string {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return strings.Replace(dir, "\\", "/", -1)
 }
 
 func handleMessages(w *astilectron.Window, m bootstrap.MessageIn) (payload interface{}, err error) {
@@ -75,19 +83,6 @@ func handleMessages(w *astilectron.Window, m bootstrap.MessageIn) (payload inter
 		payload = hosts
 	}
 	return
-}
-
-func getHostsFile() string {
-	switch runtime.GOOS {
-	case "darwin":
-		return "/etc/hosts"
-	case "windows":
-		return "C:\\Windows\\System32\\drivers\\etc\\hosts"
-	case "linux":
-		return "/etc/hosts"
-	default:
-		return ""
-	}
 }
 
 func checkError(err error) {

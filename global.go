@@ -1,15 +1,16 @@
 package main
 
-import "net"
-
-// `json:"xxx"` 转换json时相对应的字段
-type Host struct {
-	Domain  string `json:"domain"`
-	IP      string `json:"ip"`
-	Enabled bool   `json:"enabled"`
-}
+import (
+	"flag"
+	"github.com/asticode/go-astilectron"
+	"host-manager/manager"
+)
 
 var (
-	hosts []Host
-	ln    net.Listener
+	AppName string
+	BuiltAt string
+	debug   = flag.Bool("d", false, "enables the debug mode")
+	w       *astilectron.Window
+	m       *manager.Manager
+	hosts   []manager.Host
 )
