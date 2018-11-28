@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -18,21 +19,75 @@ type Host struct {
 	LineNumber int    `json:"lineNumber"`
 }
 
-type Manager struct {
-	hostsDir    string
-	SystemHosts []Host
+type Hosts map[int]Host
+
+type Group struct {
+	Name    string `json:"name"`
+	Enabled bool   `json:"enabled"`
+	Hosts   Hosts  `json:"hosts"`
 }
 
-func New(hostDir string) *Manager {
+type Manager struct {
+	hostsDir    string
+	SystemHosts *Hosts
+}
+
+func New(hostsDir string) *Manager {
 	m := new(Manager)
-	m.hostsDir = hostDir
+	m.hostsDir = hostsDir
+
 	return m
 }
 
-func (h *Manager) GetHosts(file *os.File) (hosts []Host) {
+func (h *Manager) Init() *Manager {
+	exists, err := PathExists(h.hostsDir)
+
+	defer h.initSystemHosts()
+
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(0)
+	}
+
+	if exists {
+		return h
+	}
+
+	//create hosts dir
+	err = os.Mkdir(h.hostsDir, 0777)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(0)
+	}
+	return h
+}
+
+func (h *Manager) initSystemHosts() {
+	file, _ := os.Open(GetHostsFile())
+	hosts := h.GetHosts(file)
+	h.SystemHosts = &hosts
+	exists1, err := PathExists(h.hostsDir + "/Default_Group.enable")
+	exists2, err := PathExists(h.hostsDir + "/Default_Group.disable")
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(0)
+	}
+
+	if exists1 || exists2 {
+		return
+	}
+	h.WriteHosts("Default_Group.enable", *h.SystemHosts)
+}
+
+func (h *Manager) GetHostDir() string {
+	return h.hostsDir
+}
+
+func (h *Manager) GetHosts(file *os.File) Hosts {
 	br := bufio.NewReader(file)
 	//each file line by line
 	lineIndex := -1
+	hosts := make(Hosts)
 	for {
 		line, _, err := br.ReadLine()
 		lineString := strings.TrimSpace(string(line))
@@ -65,32 +120,63 @@ func (h *Manager) GetHosts(file *os.File) (hosts []Host) {
 		if !regexp.MustCompile(IPv4Pattern).MatchString(hostSplit[0]) && !regexp.MustCompile(IPv6Pattern).MatchString(hostSplit[0]) {
 			continue
 		}
-		hosts = append(hosts, Host{
+		hosts[lineIndex] = Host{
 			Domain:     hostSplit[1],
 			IP:         hostSplit[0],
 			Enabled:    enabled,
 			LineNumber: lineIndex,
-		})
+		}
 	}
 	return hosts
 }
 
 func (h *Manager) WriteContent(name string, content string) {
 	data := []byte(content)
-	if ioutil.WriteFile(h.hostsDir+"/"+name, data, 0644) == nil {
-		fmt.Println("写入文件成功:", content)
+	err := ioutil.WriteFile(h.hostsDir+"/"+name, data, 0666)
+	if err != nil {
+		_, _ = fmt.Println("写入文件失败", err)
+		os.Exit(0)
 	}
 }
 
-func (h *Manager) WriteHosts(name string, hosts []Host) {
+func (h *Manager) WriteHosts(name string, hosts Hosts) {
 	hostsContent := ""
 	eol := GetLineSeparator()
-	for i, _ := range hosts {
-		host := hosts[i]
+	for _, host := range hosts {
 		if !host.Enabled {
 			hostsContent += "#"
 		}
 		hostsContent += host.IP + " " + host.Domain + eol
 	}
 	h.WriteContent(name, hostsContent)
+}
+
+func (h *Manager) GetGroups() map[string]interface{} {
+	groupMap := make(map[string]interface{})
+	fmt.Println(h.hostsDir)
+	files, _ := ioutil.ReadDir(h.hostsDir)
+
+	for _, f := range files {
+		groupInfo := strings.Split(f.Name(), ".")
+		var enabled = false
+		if groupInfo[len(groupInfo)-1] == "enabled" {
+			enabled = true
+		}
+		groupName := groupInfo[0]
+		if len(groupInfo) >= 3 {
+			groupName = strings.Join(groupInfo[0:], ".")
+		}
+		transferGroupName(&groupName, true)
+		groupMap[f.Name()] = Group{Name: groupName, Enabled: enabled}
+		fmt.Println(f.Name())
+	}
+	return groupMap
+}
+
+func transferGroupName(name *string, isDisplay bool) {
+	if isDisplay {
+		*name = strings.Replace(*name, "_", " ", -1)
+	} else {
+		*name = strings.Replace(*name, " ", "_", -1)
+	}
 }

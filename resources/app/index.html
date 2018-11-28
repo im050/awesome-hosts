@@ -10,16 +10,18 @@
     <link href="static/css/app.css" rel="stylesheet">
 </head>
 <body>
-<div id="app">
+<div id="app" v-loading.fullscreen.lock="fullscreenLoading">
     <el-container>
         <el-aside width="200px">
             <ul class="list">
-                <li class="current"><i class="fa fa-file-text-o fa-lg"></i> 正在使用</li>
-                <li><i class="fa fa-list-ul fa-lg"></i> 测试环境<span class="checkbox"><el-checkbox v-model="checked"
-                                                                                                @change="changeTest"></el-checkbox></span>
+                <li class="current"><i class="fa fa-file-text-o fa-lg"></i> System hosts</li>
+                <li v-for="item in hostGroups">
+                    <i class="fa fa-list-ul fa-lg"></i>
+                    {{ item.name }}
+                    <span class="checkbox">
+                        <el-checkbox v-model="checked" @change="changeTest"></el-checkbox>
+                    </span>
                 </li>
-                <li><i class="fa fa-list-ul fa-lg"></i> 预发布环境<span class="checkbox"><el-checkbox
-                                v-model="checked2"></el-checkbox></span></li>
             </ul>
         </el-aside>
         <el-container>

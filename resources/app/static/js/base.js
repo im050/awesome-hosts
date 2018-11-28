@@ -19,6 +19,8 @@ Server.prototype.sendMessage = function(name, payload, callback) {
             systemHostsLoading: false,
             checked: true,
             checked2: false,
+            fullscreenLoading: true,
+            hostGroups: [],
             input5: '',
             ops: {
                 vuescroll: {
@@ -53,7 +55,6 @@ Server.prototype.sendMessage = function(name, payload, callback) {
                     message: '左侧分组可通过点击复选框快速启用及关闭哦~',
                     position: 'top-left'
                 });
-                console.log("no problem");
                 let _this = this;
                 server.sendMessage("list", {}, function(message) {
                     _this.systemHosts =  message.payload;
@@ -61,14 +62,17 @@ Server.prototype.sendMessage = function(name, payload, callback) {
                     setTimeout(() => {
                         t.systemHostsLoading = false;
                     }, 500);
-
-                    //
-                    // let html = "";
-                    // for (let i in data) {
-                    //     let item = data[i];
-                    //     html += "<tr><th scope=\"row\">"+(parseInt(i)+1)+"</th><td>"+item.ip+"</td><td>"+item.domain+"</td><td>"+item.enabled+"</td></tr>";
-                    // }
-                    // document
+                });
+                this.getHostGroups();
+            },
+            getHostGroups: function() {
+                let _this = this;
+                server.sendMessage('groups', {}, function(message) {
+                    _this.hostGroups = message.payload
+                    let t = _this;
+                    setTimeout(() => {
+                            t.fullscreenLoading = false;
+                        }, 1000)
                 })
             }
         }
