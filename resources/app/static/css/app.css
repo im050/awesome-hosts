@@ -28,6 +28,12 @@ html, body, .framework, .framework>.row {
     box-sizing: border-box;
 }
 
+.el-header h4 {
+    height: 60px;
+    line-height: 60px;
+    font-weight: 100;
+}
+
 .el-footer {
     background: rgb(243, 243, 243);
     box-shadow: none;
@@ -119,7 +125,7 @@ td.el-table_1_column_4 i {
 }
 .list li .fa {
     margin-right: 5px;
-    transform: scale(0.6);
+    transform: scale(0.75);
 }
 .list-view {
     width: 100%;
@@ -138,7 +144,29 @@ td.el-table_1_column_4 i {
     height: 100%;
 }
 
-.search {
-    width: 300px;
-    padding: 10px 0 10px 0;
+
+.add-panel .el-input {
+    margin-top: 10px;
+    width: 220px;
+}
+
+/**
+    fix the icon that about size of domain
+ */
+.add-panel .el-input i.el-icon-fa-desktop {
+    margin-top: 1px;
+    -webkit-transform: scale(0.8);
+    -moz-transform: scale(0.8);
+    -ms-transform: scale(0.8);
+    -o-transform: scale(0.8);
+    transform: scale(0.8);
+}
+
+[class^="el-icon-fa"], [class*=" el-icon-fa"] {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome!important;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }

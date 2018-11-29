@@ -18,17 +18,20 @@ type Host struct {
 	LineNumber int    `json:"lineNumber"`
 }
 
-type Hosts map[int]Host //line=>number
+type Hosts []Host //line=>number
+type Groups []Group
 
 type Group struct {
 	Name    string `json:"name"`
 	Enabled bool   `json:"enabled"`
+	Active  bool   `json:"active"`
 	Hosts   Hosts  `json:"hosts"`
 }
 
 type Manager struct {
 	hostsDir    string
-	SystemHosts *Hosts
+	SystemHosts Hosts
+	Groups      Groups
 }
 
 func New(hostsDir string) *Manager {
@@ -63,19 +66,24 @@ func (h *Manager) Init() *Manager {
 
 func (h *Manager) initSystemHosts() {
 	file, _ := os.Open(GetHostsFile())
+	defer ErrorAndExitWithLog(file.Close())
 	hosts := h.GetHosts(file)
-	h.SystemHosts = &hosts
+	h.SystemHosts = hosts
 	exists1, err := PathExists(h.hostsDir + "/Default_Group.enable")
 	exists2, err := PathExists(h.hostsDir + "/Default_Group.disable")
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(0)
 	}
-
 	if exists1 || exists2 {
 		return
 	}
-	h.WriteHosts("Default_Group.enable", *h.SystemHosts)
+	h.WriteHosts("Default_Group.enable", h.SystemHosts)
+}
+
+func (h *Manager) initGroups() {
+	groups := h.GetGroups()
+	h.Groups = groups
 }
 
 func (h *Manager) GetHostDir() string {
@@ -86,7 +94,7 @@ func (h *Manager) GetHosts(file *os.File) Hosts {
 	br := bufio.NewReader(file)
 	//each file line by line
 	lineIndex := -1
-	hosts := make(Hosts)
+	var hosts []Host
 	for {
 		line, _, err := br.ReadLine()
 		lineString := strings.TrimSpace(string(line))
@@ -119,12 +127,12 @@ func (h *Manager) GetHosts(file *os.File) Hosts {
 		if !regexp.MustCompile(IPv4Pattern).MatchString(hostSplit[0]) && !regexp.MustCompile(IPv6Pattern).MatchString(hostSplit[0]) {
 			continue
 		}
-		hosts[lineIndex] = Host{
+		hosts = append(hosts, Host{
 			Domain:     hostSplit[1],
 			IP:         hostSplit[0],
 			Enabled:    enabled,
 			LineNumber: lineIndex,
-		}
+		})
 	}
 	return hosts
 }
@@ -150,11 +158,11 @@ func (h *Manager) WriteHosts(name string, hosts Hosts) {
 	h.WriteContent(name, hostsContent)
 }
 
-func (h *Manager) GetGroups() map[string]interface{} {
-	groupMap := make(map[string]interface{})
+func (h *Manager) GetGroups() []Group {
+	var groups []Group
 	fmt.Println(h.hostsDir)
-	files, _ := ioutil.ReadDir(h.hostsDir)
-
+	files, err := ioutil.ReadDir(h.hostsDir)
+	ErrorAndExitWithLog(err)
 	for _, f := range files {
 		groupInfo := strings.Split(f.Name(), ".")
 		var enabled = false
@@ -166,10 +174,15 @@ func (h *Manager) GetGroups() map[string]interface{} {
 			groupName = strings.Join(groupInfo[0:], ".")
 		}
 		transferGroupName(&groupName, true)
-		groupMap[f.Name()] = Group{Name: groupName, Enabled: enabled}
-		fmt.Println(f.Name())
+		//read host file
+		file, err := os.Open(h.hostsDir + "/" + f.Name())
+		hosts := h.GetHosts(file)
+		ErrorAndExitWithLog(file.Close())
+		ErrorAndExitWithLog(err)
+		//append to groups
+		groups = append(groups, Group{Name: groupName, Enabled: enabled, Active: false, Hosts: hosts})
 	}
-	return groupMap
+	return groups
 }
 
 func transferGroupName(name *string, isDisplay bool) {
@@ -177,5 +190,12 @@ func transferGroupName(name *string, isDisplay bool) {
 		*name = strings.Replace(*name, "_", " ", -1)
 	} else {
 		*name = strings.Replace(*name, " ", "_", -1)
+	}
+}
+
+func ErrorAndExitWithLog(err error) {
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(-1)
 	}
 }

@@ -14,11 +14,10 @@
     <el-container>
         <el-aside width="200px">
             <ul class="list">
-                <li class="current"><i class="fa fa-file-text-o fa-lg"></i> System hosts</li>
-                <li v-for="item in hostGroups">
-                    <i class="fa fa-list-ul fa-lg"></i>
+                <li :class="item.active ? 'current' : '' " v-for="item in hostGroups" @click="changeGroup(item.name)">
+                    <i class="fa fa-lg" :class="item.name != 'System Hosts' ? 'el-icon-fa-list-ul' : 'el-icon-fa-desktop'"></i>
                     {{ item.name }}
-                    <span class="checkbox">
+                    <span class="checkbox" v-if="item.name != 'System Hosts'">
                         <el-checkbox v-model="item.enabled" @change="groupSwitch"></el-checkbox>
                     </span>
                 </li>
@@ -26,7 +25,7 @@
         </el-aside>
         <el-container>
             <el-header>
-
+                <h4>{{ system.currentGroupName }}</h4>
             </el-header>
             <el-main>
                 <el-table
@@ -101,7 +100,21 @@
 
             </el-main>
             <el-footer>
-
+                <div class="add-panel">
+                <el-input
+                        placeholder="IP"
+                        v-model="addIp"
+                        prefix-icon="el-icon-location-outline"
+                        clearable>
+                </el-input>
+                <el-input
+                        placeholder="Domain"
+                        v-model="addHost"
+                        prefix-icon="el-icon-fa-desktop"
+                        clearable>
+                </el-input>
+                <el-button icon="el-icon-plus"></el-button>
+                </div>
             </el-footer>
         </el-container>
     </el-container>
