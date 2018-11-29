@@ -12,5 +12,4 @@ var (
 	debug   = flag.Bool("d", false, "enables the debug mode")
 	w       *astilectron.Window
 	m       *manager.Manager
-	hosts   []manager.Host
 )

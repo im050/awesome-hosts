@@ -19,7 +19,7 @@
                     <i class="fa fa-list-ul fa-lg"></i>
                     {{ item.name }}
                     <span class="checkbox">
-                        <el-checkbox v-model="checked" @change="changeTest"></el-checkbox>
+                        <el-checkbox v-model="item.enabled" @change="groupSwitch"></el-checkbox>
                     </span>
                 </li>
             </ul>
@@ -33,9 +33,9 @@
                         :data="systemHosts"
                         v-loading="systemHostsLoading"
                         stripe
-                        height="100%"
                         border
-                        style="width: 100%;">
+                        height="100%"
+                        style="width: 100%; ">
                     <el-table-column
                             label="Enable"
                             width="80"
@@ -98,7 +98,11 @@
                         </template>
                     </el-table-column>
                 </el-table>
+
             </el-main>
+            <el-footer>
+
+            </el-footer>
         </el-container>
     </el-container>
 </div>

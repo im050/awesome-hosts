@@ -11,7 +11,6 @@ import (
 	"strings"
 )
 
-// `json:"xxx"` 转换json时相对应的字段
 type Host struct {
 	Domain     string `json:"domain"`
 	IP         string `json:"ip"`
@@ -19,7 +18,7 @@ type Host struct {
 	LineNumber int    `json:"lineNumber"`
 }
 
-type Hosts map[int]Host
+type Hosts map[int]Host //line=>number
 
 type Group struct {
 	Name    string `json:"name"`
@@ -159,7 +158,7 @@ func (h *Manager) GetGroups() map[string]interface{} {
 	for _, f := range files {
 		groupInfo := strings.Split(f.Name(), ".")
 		var enabled = false
-		if groupInfo[len(groupInfo)-1] == "enabled" {
+		if groupInfo[len(groupInfo)-1] == "enable" {
 			enabled = true
 		}
 		groupName := groupInfo[0]

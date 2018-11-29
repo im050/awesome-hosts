@@ -18,13 +18,20 @@ html, body, .framework, .framework>.row {
 }
 .el-main {
     background: rgb(41, 43, 55);
-    height: calc(100% - 60px);
+    height: 100%;
     position: relative;
     padding: 0px;
 }
 .el-header {
     background: rgb(243, 243, 243);
     border-bottom: 1px solid rgb(226, 226, 226);
+    box-sizing: border-box;
+}
+
+.el-footer {
+    background: rgb(243, 243, 243);
+    box-shadow: none;
+    border-top: 1px solid rgb(226, 226, 226);
     box-sizing: border-box;
 }
 

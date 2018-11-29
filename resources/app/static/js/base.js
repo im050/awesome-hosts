@@ -15,28 +15,13 @@ Server.prototype.sendMessage = function(name, payload, callback) {
     let app = new Vue({
         el: '#app',
         data: {
-            systemHosts: [{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true}],
+            systemHosts: [],//[{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true}],
             systemHostsLoading: false,
-            checked: true,
-            checked2: false,
-            fullscreenLoading: true,
-            hostGroups: [],
-            input5: '',
-            ops: {
-                vuescroll: {
-                    mode: 'slide',
-                    sizeStrategy: 'number',
-                    /** Whether to detect dom resize or not */
-                    detectResize: false
-                },
-                bar: {
-                    background: '#ffffff',
-                    opacity: 0.5,
-                }
-            }
+            fullscreenLoading: false,
+            hostGroups: []
         },
         methods: {
-            changeTest: function(value) {
+            groupSwitch: function(value) {
                 if (value) {
                     this.$message({
                         message: '启用分组成功',
@@ -50,13 +35,22 @@ Server.prototype.sendMessage = function(name, payload, callback) {
                 }
             },
             initSystemHosts: function() {
+                let _this = this;
+                setTimeout(function() {
+                    console.log("yes")
+                    _this.systemHosts = [{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true}]
+
+                }, 2000);return
                 this.$notify({
                     title: '提示',
                     message: '左侧分组可通过点击复选框快速启用及关闭哦~',
                     position: 'top-left'
                 });
-                let _this = this;
-                server.sendMessage("list", {}, function(message) {
+
+                server.sendMessage("event.name", "world", function(message) {
+                    console.log(message)
+                });
+                server.sendMessage("list", {type: "SystemHosts"}, function(message) {
                     _this.systemHosts =  message.payload;
                     let t = _this;
                     setTimeout(() => {

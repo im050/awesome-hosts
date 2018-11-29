@@ -42,4 +42,5 @@ func main() {
 	}); err != nil {
 		astilog.Fatal(errors.Wrap(err, "running bootstrap failed"))
 	}
+
 }
