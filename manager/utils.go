@@ -52,3 +52,14 @@ func GetCurrentDirectory() string {
 	}
 	return strings.Replace(dir, "\\", "/", -1)
 }
+
+func GetUserHome() string {
+	home := ""
+	if runtime.GOOS == "windows" {
+		home = os.Getenv("USERPROFILE")
+	} else {
+		home = os.Getenv("HOME")
+	}
+
+	return home
+}

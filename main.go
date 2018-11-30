@@ -11,7 +11,7 @@ import (
 
 func main() {
 	//init manager instance
-	m = manager.New(manager.GetCurrentDirectory() + "/hosts").Init()
+	m = manager.New(manager.GetUserHome() + "/.awesohosts").Init()
 	// Init
 	flag.Parse()
 	astilog.FlagInit()

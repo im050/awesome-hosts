@@ -28,6 +28,9 @@ type Group struct {
 	Hosts   Hosts  `json:"hosts"`
 }
 
+type HostData struct {
+}
+
 type Manager struct {
 	hostsDir    string
 	SystemHosts Hosts
@@ -66,7 +69,7 @@ func (h *Manager) Init() *Manager {
 
 func (h *Manager) initSystemHosts() {
 	file, _ := os.Open(GetHostsFile())
-	defer ErrorAndExitWithLog(file.Close())
+	defer file.Close()
 	hosts := h.GetHosts(file)
 	h.SystemHosts = hosts
 	exists1, err := PathExists(h.hostsDir + "/Default_Group.enable")
@@ -161,8 +164,8 @@ func (h *Manager) WriteHosts(name string, hosts Hosts) {
 func (h *Manager) GetGroups() []Group {
 	var groups []Group
 	fmt.Println(h.hostsDir)
-	files, err := ioutil.ReadDir(h.hostsDir)
-	ErrorAndExitWithLog(err)
+	files, _ := ioutil.ReadDir(h.hostsDir)
+
 	for _, f := range files {
 		groupInfo := strings.Split(f.Name(), ".")
 		var enabled = false

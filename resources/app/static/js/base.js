@@ -12,15 +12,16 @@ Server.prototype.sendMessage = function (name, payload, callback) {
 
 (function () {
     let system = {
-        currentGroupName: ''
+        currentGroupName: '',
+        currentHosts: [],
+        systemHosts: []
     };
     let server = new Server();
     let app = new Vue({
         el: '#app',
         data: {
-            systemHosts: [],//[{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true},{ip: 'test', domain: 'a', enabled: true}],
-            systemHostsLoading: false,
-            fullscreenLoading: false,
+            hostsLoading: false, //true,
+            fullscreenLoading: false, //true,
             hostGroups: [],
             addIp: '',
             addHost: '',
@@ -52,22 +53,29 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     _this.hostGroups[0].active = true;
                     _this.system.currentGroupName = _this.hostGroups[0].name;
                     _this.fullscreenLoading = false;
-                    _this.systemHostsLoading = false;
+                    _this.hostsLoading = false;
                     console.log(results);
                 });
             },
             changeGroup: function (groupName) {
                 for (let i in this.hostGroups) {
                     let item = this.hostGroups[i];
-                    item.active = groupName === item.name;
+                    if (groupName === item.name) {
+                        item.active = true;
+                        this.system.currentHosts = (groupName === "System Hosts") ? this.system.systemHosts : item.hosts;
+                        this.system.currentGroupName = item.name;
+                    } else {
+                        item.active = false;
+                    }
                 }
             },
             getList: function (type) {
                 let _this = this;
                 return new Promise((resolve) => {
                     server.sendMessage("list", {type: type}, (message) => {
-                        _this.systemHosts = message.payload;
-                        _this.systemHostsLoading = false;
+                        _this.system.currentHosts = message.payload;
+                        _this.system.systemHosts = message.payload;
+                        _this.hostsLoading = false;
                         resolve(true)
                     });
                 })
