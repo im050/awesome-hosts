@@ -2,6 +2,7 @@ package manager
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -28,25 +29,39 @@ type Group struct {
 	Hosts   Hosts  `json:"hosts"`
 }
 
-type HostData struct {
+type HostGroupData struct {
+	Name                 string
+	Enabled              bool
+	LastUpdatedTimestamp uint32
+}
+
+type Config struct {
+	Groups               []HostGroupData
+	LastUpdatedTimestamp uint32 //last timestamp of hosts data was updated
+	LastSyncTimestamp    uint32 //last timestamp of refresh hosts data to system hosts
 }
 
 type Manager struct {
-	hostsDir    string
-	SystemHosts Hosts
-	Groups      Groups
+	hostsDir         string
+	ConfigFileName   string
+	DefaultGroupName string
+	SystemHosts      Hosts
+	Groups           Groups
+	Config           Config
 }
 
 func New(hostsDir string) *Manager {
 	m := new(Manager)
 	m.hostsDir = hostsDir
-
+	m.DefaultGroupName = "Default Hosts"
+	m.ConfigFileName = "data.config"
 	return m
 }
 
 func (h *Manager) Init() *Manager {
 	exists, err := PathExists(h.hostsDir)
 
+	defer h.initGroups()
 	defer h.initSystemHosts()
 
 	if err != nil {
@@ -72,16 +87,16 @@ func (h *Manager) initSystemHosts() {
 	defer file.Close()
 	hosts := h.GetHosts(file)
 	h.SystemHosts = hosts
-	exists1, err := PathExists(h.hostsDir + "/Default_Group.enable")
-	exists2, err := PathExists(h.hostsDir + "/Default_Group.disable")
+	exists, err := PathExists(h.hostsDir + "/" + GetHostFileName(h.DefaultGroupName))
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(0)
 	}
-	if exists1 || exists2 {
+	if exists {
 		return
 	}
-	h.WriteHosts("Default_Group.enable", h.SystemHosts)
+	h.WriteHosts(GetHostFileName(h.DefaultGroupName), h.SystemHosts)
+	h.initConfigFile()
 }
 
 func (h *Manager) initGroups() {
@@ -93,11 +108,27 @@ func (h *Manager) GetHostDir() string {
 	return h.hostsDir
 }
 
+func (h *Manager) initConfigFile() {
+	h.Config = Config{
+		Groups:               []HostGroupData{{Name: h.DefaultGroupName, Enabled: true, LastUpdatedTimestamp: 0}},
+		LastUpdatedTimestamp: 0,
+		LastSyncTimestamp:    0,
+	}
+	jsonText, err := json.Marshal(h.Config)
+	ErrorAndExitWithLog(err)
+	err = ioutil.WriteFile(h.hostsDir+"/"+h.ConfigFileName, jsonText, 0644)
+	ErrorAndExitWithLog(err)
+}
+
 func (h *Manager) GetHosts(file *os.File) Hosts {
 	br := bufio.NewReader(file)
 	//each file line by line
 	lineIndex := -1
 	var hosts []Host
+	groupEnableMap := map[string]bool{}
+	for _, c := range h.Config.Groups {
+		groupEnableMap[c.Name] = c.Enabled
+	}
 	for {
 		line, _, err := br.ReadLine()
 		lineString := strings.TrimSpace(string(line))
@@ -165,12 +196,10 @@ func (h *Manager) GetGroups() []Group {
 	var groups []Group
 	fmt.Println(h.hostsDir)
 	files, _ := ioutil.ReadDir(h.hostsDir)
-
 	for _, f := range files {
 		groupInfo := strings.Split(f.Name(), ".")
-		var enabled = false
-		if groupInfo[len(groupInfo)-1] == "enable" {
-			enabled = true
+		if groupInfo[len(groupInfo)-1] != "host" {
+			continue
 		}
 		groupName := groupInfo[0]
 		if len(groupInfo) >= 3 {
@@ -183,22 +212,7 @@ func (h *Manager) GetGroups() []Group {
 		ErrorAndExitWithLog(file.Close())
 		ErrorAndExitWithLog(err)
 		//append to groups
-		groups = append(groups, Group{Name: groupName, Enabled: enabled, Active: false, Hosts: hosts})
+		groups = append(groups, Group{Name: groupName, Enabled: false, Active: false, Hosts: hosts})
 	}
 	return groups
-}
-
-func transferGroupName(name *string, isDisplay bool) {
-	if isDisplay {
-		*name = strings.Replace(*name, "_", " ", -1)
-	} else {
-		*name = strings.Replace(*name, " ", "_", -1)
-	}
-}
-
-func ErrorAndExitWithLog(err error) {
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(-1)
-	}
 }

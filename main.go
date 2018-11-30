@@ -1,12 +1,12 @@
 package main
 
 import (
+	"awesome-hosts/manager"
 	"flag"
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron-bootstrap"
 	"github.com/asticode/go-astilog"
 	"github.com/pkg/errors"
-	"host-manager/manager"
 )
 
 func main() {

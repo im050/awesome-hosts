@@ -21,7 +21,7 @@ func handleMessages(w *astilectron.Window, mi bootstrap.MessageIn) (payload inte
 	case "list":
 		payload = m.SystemHosts
 	case "groups":
-		payload = m.GetGroups()
+		payload = m.Groups
 	}
 
 	return

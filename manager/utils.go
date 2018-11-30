@@ -63,3 +63,23 @@ func GetUserHome() string {
 
 	return home
 }
+
+func transferGroupName(name *string, isDisplay bool) {
+	if isDisplay {
+		*name = strings.Replace(*name, "_", " ", -1)
+	} else {
+		*name = strings.Replace(*name, " ", "_", -1)
+	}
+}
+
+func ErrorAndExitWithLog(err error) {
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(-1)
+	}
+}
+
+func GetHostFileName(name string) string {
+	transferGroupName(&name, false)
+	return name + ".host"
+}

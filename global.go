@@ -1,9 +1,9 @@
 package main
 
 import (
+	"awesome-hosts/manager"
 	"flag"
 	"github.com/asticode/go-astilectron"
-	"host-manager/manager"
 )
 
 var (
