@@ -103,4 +103,5 @@ func GetIntranetIp() string {
 
 		}
 	}
+	return ""
 }
