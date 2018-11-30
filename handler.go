@@ -1,6 +1,7 @@
 package main
 
 import (
+	"awesome-hosts/manager"
 	"encoding/json"
 	"fmt"
 	"github.com/asticode/go-astilectron"
@@ -22,6 +23,8 @@ func handleMessages(w *astilectron.Window, mi bootstrap.MessageIn) (payload inte
 		payload = m.SystemHosts
 	case "groups":
 		payload = m.Groups
+	case "intranet":
+		payload = manager.GetIntranetIp()
 	}
 
 	return

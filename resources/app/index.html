@@ -8,12 +8,13 @@
     <link href="static/css/app.css" rel="stylesheet">
 </head>
 <body>
-<div id="app" v-loading.fullscreen.lock="fullscreenLoading" v-cloak>
+<div id="app" v-loading.fullscreen.lock="fullscreenLoading">
     <el-container>
         <el-aside width="200px" class="unselectable">
             <ul class="list">
                 <li :class="item.active ? 'current' : '' " v-for="item in hostGroups" @click="changeGroup(item.name)">
-                    <i class="fa fa-lg" :class="item.name != 'System Hosts' ? 'el-icon-fa-list-ul' : 'el-icon-fa-desktop'"></i>
+                    <i class="fa fa-lg"
+                       :class="item.name != 'System Hosts' ? 'el-icon-fa-list-ul' : 'el-icon-fa-desktop'"></i>
                     {{ item.name }}
                     <span class="checkbox" v-if="item.name != 'System Hosts'">
                         <el-checkbox v-model="item.enabled" @change="groupSwitch"></el-checkbox>
@@ -99,19 +100,22 @@
             </el-main>
             <el-footer>
                 <div class="add-panel">
-                <el-input
-                        placeholder="IP"
-                        v-model="addIp"
-                        prefix-icon="el-icon-location-outline"
-                        clearable>
-                </el-input>
-                <el-input
-                        placeholder="Domain"
-                        v-model="addHost"
-                        prefix-icon="el-icon-fa-desktop"
-                        clearable>
-                </el-input>
-                <el-button icon="el-icon-plus"></el-button>
+                    <el-autocomplete
+                            class="inline-input"
+                            v-model="addIp"
+                            :fetch-suggestions="querySearch"
+                            prefix-icon="el-icon-location-outline"
+                            @select="handleSelect"
+                            placeholder="IP"
+                            clearable
+                    ></el-autocomplete>
+                    <el-input
+                            placeholder="Domain"
+                            v-model="addHost"
+                            prefix-icon="el-icon-fa-desktop"
+                            clearable>
+                    </el-input>
+                    <el-button icon="el-icon-plus"></el-button>
                 </div>
             </el-footer>
         </el-container>

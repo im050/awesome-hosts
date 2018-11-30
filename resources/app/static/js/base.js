@@ -5,6 +5,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
     document.addEventListener('astilectron-ready', function () {
         // This will send a message to Go
         astilectron.sendMessage({name: name, payload: payload}, function (message) {
+            console.log(message)
             callback(message)
         });
     });
@@ -20,14 +21,39 @@ Server.prototype.sendMessage = function (name, payload, callback) {
     let app = new Vue({
         el: '#app',
         data: {
-            hostsLoading: false, //true,
-            fullscreenLoading: false, //true,
+            hostsLoading: true,
+            fullscreenLoading: true,
             hostGroups: [],
             addIp: '',
             addHost: '',
-            system: system
+            system: system,
+            ipPrepareList: []
         },
         methods: {
+            querySearch(queryString, show) {
+                let ipPrepareList = this.ipPrepareList;
+                let results = queryString ? ipPrepareList.filter(this.createFilter(queryString)) : ipPrepareList;
+                // 调用 callback 返回建议列表的数据
+                show(results);
+            },
+            createFilter(queryString) {
+                return (ipPrepareList) => {
+                    return (ipPrepareList.value.indexOf(queryString) === 0);
+                };
+            },
+            handleSelect(item) {
+                console.log(item);
+            },
+            loadIpPrepareList() {
+                server.sendMessage("intranet", {}, (message) => {
+                    var data = [{value: "127.0.0.1"}];
+                    let ip = message.payload;
+                    if (ip !== "") {
+                        data.push({value: ip})
+                    }
+                    this.ipPrepareList = data;
+                })
+            },
             groupSwitch: function (value) {
                 if (value) {
                     this.$message({
@@ -41,19 +67,15 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     });
                 }
             },
-            initSystemHosts: function () {
+            init: function () {
                 let _this = this;
-                // this.$notify({
-                //     title: '提示',
-                //     message: '左侧分组可通过点击复选框快速启用及关闭哦~',
-                //     position: 'top-left'
-                // });
                 Promise.all([this.getList("System Hosts"), this.getHostGroups()]).then((results) => {
-                    console.log(_this.hostGroups);
                     _this.hostGroups[0].active = true;
                     _this.system.currentGroupName = _this.hostGroups[0].name;
-                    _this.fullscreenLoading = false;
-                    _this.hostsLoading = false;
+                    setTimeout(() => function () {
+                        _this.fullscreenLoading = false;
+                        _this.hostsLoading = false;
+                    }, 1000);
                     console.log(results);
                 });
             },
@@ -89,14 +111,15 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             name: "System Hosts",
                             active: false,
                         });
-                        resolve(true)
-                        setTimeout(() => {
-                            _this.fullscreenLoading = false;
-                        }, 1000)
+                        resolve(true);
                     })
                 })
             }
+        },
+        mounted() {
+            this.init();
+            this.loadIpPrepareList();
         }
     });
-    app.initSystemHosts();
+
 })();
