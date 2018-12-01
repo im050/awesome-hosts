@@ -47,8 +47,14 @@ func handleMessages(w *astilectron.Window, mi bootstrap.MessageIn) (payload inte
 		} else {
 			payload = ElectronResponse(0, "failed", nil)
 		}
+	case "syncSystemHostsUnix":
+		m.SudoPassword = data["password"].(string)
+		if m.SyncSystemHostsUnix() {
+			payload = ElectronResponse(1, "success", nil)
+		} else {
+			payload = ElectronResponse(0, "failed", nil)
+		}
 	}
-
 	return
 }
 

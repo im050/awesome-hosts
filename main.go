@@ -27,6 +27,10 @@ func main() {
 		},
 		Debug:         *debug,
 		RestoreAssets: RestoreAssets,
+		OnWait: func(_ *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
+			m.Window = ws[0]
+			return nil
+		},
 		Windows: []*bootstrap.Window{{
 			Homepage:       "index.html",
 			MessageHandler: handleMessages,

@@ -1,9 +1,11 @@
 package manager
 
 import (
+	"bytes"
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -108,4 +110,20 @@ func GetIntranetIp() string {
 
 func GetNowTimestamp() int64 {
 	return time.Now().UnixNano() / 1e6
+}
+
+
+func ShellCommand(cmdStr string) (string, error) {
+	in := bytes.NewBuffer(nil)
+	cmd := exec.Command("sh")
+	cmd.Stdin = in
+	in.WriteString(cmdStr + "\n")
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return stderr.String(), err
+	}
+	return out.String(), nil
 }

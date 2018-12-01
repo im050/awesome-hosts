@@ -193,13 +193,46 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         resolve(true);
                     })
                 })
+            },
+            needPassword: function (payload) {
+                this.$prompt('In order to sync hosts file you have to type in the administrator password.', 'Password', {
+                    confirmButtonText: 'Confirm',
+                    cancelButtonText: 'Cancel'
+                }).then(({ value }) => {
+                    server.sendMessage(payload, {password: value}, (message) => {
+                        if (message.code == 1) {
+                            this.$message({
+                                type: 'success',
+                                message: 'Synchronization success'
+                            });
+                        } else {
+                            this.$message({
+                                type: 'error',
+                                message: 'An error occured while your operating'
+                            });
+                        }
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'error',
+                        message: 'Synchronization failure'
+                    });
+                });
             }
         },
         mounted() {
             document.addEventListener('astilectron-ready',  () => {
                 this.init();
                 this.loadIpPrepareList();
+                astilectron.onMessage((message) => {
+                    switch (message.name) {
+                        case 'needPassword':
+                            this.needPassword(message.payload);
+                            break;
+                    }
+                });
             })
+
         }
     });
 })();

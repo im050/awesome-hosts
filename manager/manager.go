@@ -4,12 +4,16 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/asticode/go-astilectron"
+	"github.com/asticode/go-astilectron-bootstrap"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
+	"time"
 )
 
 type Host struct {
@@ -47,6 +51,9 @@ type Manager struct {
 	SystemHosts      Hosts
 	Groups           Groups
 	Config           Config
+	TempFileName     string
+	Window           *astilectron.Window
+	SudoPassword     string
 }
 
 func New(hostsDir string) *Manager {
@@ -54,10 +61,14 @@ func New(hostsDir string) *Manager {
 	m.hostsDir = hostsDir
 	m.DefaultGroupName = "Default Hosts"
 	m.ConfigFileName = "data.config"
+	m.TempFileName = "hosts.temp"
+	m.SudoPassword = ""
 	return m
 }
 
 func (h *Manager) Init() *Manager {
+	//fourth, every x ms sync system hosts
+	defer h.syncStart()
 	//third, init host groups
 	defer h.initGroups()
 	//second, init or load config into h.Config
@@ -226,8 +237,6 @@ func (h *Manager) GetGroups() []Group {
 		//append to groups
 		groups = append(groups, Group{Name: groupName, Enabled: enabled, Active: false, Hosts: hosts})
 	}
-	//refresh config file content
-	h.persistConfig()
 	return groups
 }
 
@@ -239,11 +248,8 @@ func (h *Manager) AddHost(groupName string, host Host) bool {
 		return false
 	}
 	group.Hosts = append(group.Hosts, host)
-	//save group data to file
-	h.persistGroup(group)
 	//refresh groups config order by name of group
 	h.refreshGroupsConfig(group.Name)
-	h.persistConfig()
 	return true
 }
 
@@ -256,11 +262,8 @@ func (h *Manager) UpdateHost(groupName string, index int, ip string, domain stri
 	host.Enabled = enabled
 	host.IP = ip
 	host.Domain = domain
-	//save group data to file
-	h.persistGroup(group)
 	//refresh groups config order by name of group
 	h.refreshGroupsConfig(group.Name)
-	h.persistConfig()
 	return true
 }
 
@@ -285,13 +288,42 @@ func (h *Manager) EnableGroup(groupName string, enabled bool) bool {
 	if config == nil {
 		return false
 	}
+	group := h.FindGroup(groupName)
+	if group == nil {
+		return false
+	}
+	group.Enabled = enabled
 	config.Enabled = enabled
 	h.Config.LastUpdatedTimestamp = GetNowTimestamp()
-	h.persistConfig()
 	return true
 }
 
-
+func (h *Manager) syncStart() {
+	ticker := time.NewTicker(time.Second)
+	go func() {
+		for _ = range ticker.C {
+			if h.Config.LastUpdatedTimestamp-h.Config.LastSyncTimestamp <= 0 {
+				//fmt.Println("continue")
+				continue
+			}
+			h.Config.LastSyncTimestamp = GetNowTimestamp()
+			h.persistConfig()
+			tmpHosts := ""
+			for _, config := range h.Config.Groups {
+				group := h.FindGroup(config.Name)
+				str := h.persistGroup(group)
+				if config.Enabled {
+					tmpHosts += "#Group Name: " + config.Name + GetLineSeparator()
+					tmpHosts += str + GetLineSeparator() + GetLineSeparator()
+				}
+			}
+			err := ioutil.WriteFile(h.hostsDir+"/"+h.TempFileName, []byte(tmpHosts), 0666)
+			ErrorAndExitWithLog(err)
+			h.SyncSystemHosts()
+			fmt.Println("updated")
+		}
+	}()
+}
 
 //refresh config
 //when group has changed, remember call this func to updated config file and var `h.Config`.
@@ -299,7 +331,7 @@ func (h *Manager) refreshGroupsConfig(groupName string) {
 	timestamp := GetNowTimestamp()
 	config := h.FindGroupConfig(groupName)
 	if config == nil {
-		return ;
+		return;
 	}
 	h.Config.LastUpdatedTimestamp = timestamp
 	config.LastUpdatedTimestamp = timestamp
@@ -316,7 +348,7 @@ func (h *Manager) FindGroupConfig(groupName string) *GroupConfig {
 	return nil
 }
 
-func (h *Manager) persistGroup(group *Group) {
+func (h *Manager) persistGroup(group *Group) string {
 	groupName := group.Name
 	filePath := h.hostsDir + "/" + GetHostFileName(groupName)
 	str := ""
@@ -329,9 +361,10 @@ func (h *Manager) persistGroup(group *Group) {
 	}
 	//remove "\r\n" at last line
 	str = strings.TrimRight(str, GetLineSeparator())
-	fmt.Println("write here", str)
+	//fmt.Println("write here", str)
 	err := ioutil.WriteFile(filePath, []byte(str), 0666)
 	ErrorAndExitWithLog(err)
+	return str
 }
 
 func (h *Manager) persistConfig() {
@@ -347,4 +380,52 @@ func (h *Manager) addGroupToConfig(groupName string, enabled bool, lastUpdatedTi
 		Enabled:              enabled,
 		LastUpdatedTimestamp: lastUpdatedTimestamp,
 	})
+}
+
+func (h *Manager) SyncSystemHosts() bool {
+	if runtime.GOOS == "windows" {
+		return h.SyncSystemHostsWin()
+	} else {
+		return h.SyncSystemHostsUnix()
+	}
+}
+
+func (h *Manager) SyncSystemHostsWin() bool {
+	return true
+}
+
+//
+//'Permission denied'
+//    , 'incorrect password'
+//    , 'Password:Sorry, try again.'
+func (h *Manager) SyncSystemHostsUnix() bool {
+	var (
+		output string
+		err    error
+	)
+	if h.SudoPassword != "" {
+		commands := []string{"echo '" + h.SudoPassword + "' | sudo -S chmod 777 " + GetHostsFile(),
+			"cat " + h.hostsDir + "/" + h.TempFileName + " > " + GetHostsFile(),
+			"echo '" + h.SudoPassword + "' | sudo -S chmod 644 " + GetHostsFile()}
+		command := strings.Join(commands, " && ")
+		output, err = ShellCommand(command)
+	} else {
+		command := "cat " + h.hostsDir + "/" + h.TempFileName + " > " + GetHostsFile()
+		output, err = ShellCommand(command)
+	}
+	needPassString := [3]string{"Permission denied", "incorrect password", "Password:Sorry, try again."}
+	if err != nil {
+		isNeedPass := false
+		for _, str := range needPassString {
+			if strings.Index(output, str) != -1 {
+				isNeedPass = true
+				break
+			}
+		}
+		if isNeedPass {
+			bootstrap.SendMessage(h.Window, "needPassword", "syncSystemHostsUnix")
+		}
+		return false
+	}
+	return true
 }
