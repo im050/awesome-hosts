@@ -13,10 +13,9 @@ import (
 )
 
 type Host struct {
-	Domain     string `json:"domain"`
-	IP         string `json:"ip"`
-	Enabled    bool   `json:"enabled"`
-	LineNumber int    `json:"lineNumber"`
+	Domain  string `json:"domain"`
+	IP      string `json:"ip"`
+	Enabled bool   `json:"enabled"`
 }
 
 type Hosts []Host //line=>number
@@ -32,13 +31,13 @@ type Group struct {
 type HostGroupData struct {
 	Name                 string
 	Enabled              bool
-	LastUpdatedTimestamp uint32
+	LastUpdatedTimestamp int64
 }
 
 type Config struct {
 	Groups               []HostGroupData
-	LastUpdatedTimestamp uint32 //last timestamp of hosts data was updated
-	LastSyncTimestamp    uint32 //last timestamp of refresh hosts data to system hosts
+	LastUpdatedTimestamp int64 //last timestamp of hosts data was updated
+	LastSyncTimestamp    int64 //last timestamp of refresh hosts data to system hosts
 }
 
 type Manager struct {
@@ -130,12 +129,10 @@ func (h *Manager) loadConfigFromFile() {
 func (h *Manager) GetHosts(file *os.File) Hosts {
 	br := bufio.NewReader(file)
 	//each file line by line
-	lineIndex := -1
 	var hosts []Host
 	for {
 		line, _, err := br.ReadLine()
 		lineString := strings.TrimSpace(string(line))
-		lineIndex++
 		if err == io.EOF {
 			break
 		}
@@ -165,10 +162,9 @@ func (h *Manager) GetHosts(file *os.File) Hosts {
 			continue
 		}
 		hosts = append(hosts, Host{
-			Domain:     hostSplit[1],
-			IP:         hostSplit[0],
-			Enabled:    enabled,
-			LineNumber: lineIndex,
+			Domain:  hostSplit[1],
+			IP:      hostSplit[0],
+			Enabled: enabled,
 		})
 	}
 	return hosts
@@ -178,7 +174,7 @@ func (h *Manager) WriteContent(name string, content string) {
 	data := []byte(content)
 	err := ioutil.WriteFile(h.hostsDir+"/"+name, data, 0666)
 	if err != nil {
-		_, _ = fmt.Println("写入文件失败", err)
+		_, _ = fmt.Println("Write to file failed.", err)
 		os.Exit(0)
 	}
 }
@@ -235,6 +231,62 @@ func (h *Manager) GetGroups() []Group {
 	return groups
 }
 
+//Add host to Group
+func (h *Manager) AddHost(groupName string, host Host) bool {
+	index := -1
+	for i, _ := range h.Groups {
+		group := &h.Groups[i]
+		if group.Name != groupName {
+			continue
+		}
+		group.Hosts = append(group.Hosts, host)
+		index = i
+	}
+	//when found group
+	if index == -1 {
+		return false
+	}
+	fmt.Println("Updated Group:", h.Groups[index])
+	//save group data to file
+	h.persistGroup(h.Groups[index])
+	//refresh groups config order by name of group
+	h.refreshGroupsConfig(h.Groups[index].Name)
+	h.persistConfig()
+	return true
+}
+
+//refresh config
+//when group has changed, remember call this func to updated config file and var `h.Config`.
+func (h *Manager) refreshGroupsConfig(groupName string) {
+	timestamp := GetNowTimestamp()
+	h.Config.LastUpdatedTimestamp = timestamp
+	for i, _ := range h.Config.Groups {
+		config := &h.Config.Groups[i]
+		if config.Name == groupName {
+			config.LastUpdatedTimestamp = timestamp
+		}
+	}
+	fmt.Println(h.Config)
+}
+
+func (h *Manager) persistGroup(group Group) {
+	groupName := group.Name
+	filePath := h.hostsDir + "/" + GetHostFileName(groupName)
+	str := ""
+	for _, host := range group.Hosts {
+		enabled := ""
+		if !host.Enabled {
+			enabled = "#"
+		}
+		str += enabled + host.IP + " " + host.Domain + GetLineSeparator()
+	}
+	//remove "\r\n" at last line
+	str = strings.TrimRight(str, GetLineSeparator())
+	fmt.Println("write here", str)
+	err := ioutil.WriteFile(filePath, []byte(str), 0666)
+	ErrorAndExitWithLog(err)
+}
+
 func (h *Manager) persistConfig() {
 	jsonText, err := json.Marshal(h.Config)
 	ErrorAndExitWithLog(err)
@@ -242,7 +294,7 @@ func (h *Manager) persistConfig() {
 	ErrorAndExitWithLog(err)
 }
 
-func (h *Manager) addGroupToConfig(groupName string, enabled bool, lastUpdatedTimestamp uint32) {
+func (h *Manager) addGroupToConfig(groupName string, enabled bool, lastUpdatedTimestamp int64) {
 	h.Config.Groups = append(h.Config.Groups, HostGroupData{
 		Name:                 groupName,
 		Enabled:              enabled,

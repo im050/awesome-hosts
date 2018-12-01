@@ -2,12 +2,12 @@ let Server = function () {
 };
 
 Server.prototype.sendMessage = function (name, payload, callback) {
-    document.addEventListener('astilectron-ready', function () {
-        // This will send a message to Go
-        astilectron.sendMessage({name: name, payload: payload}, function (message) {
-            console.log(message)
-            callback(message)
-        });
+    // This will send a message to Go
+    console.log({name:  name, payload:payload})
+    astilectron.sendMessage({name: name, payload: payload}, function (message) {
+        console.log("receive:");
+        console.log(message);
+        callback(message)
     });
 };
 
@@ -71,12 +71,15 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             },
             addHost: function () {
                 this.addHostLoading = true;
-                setTimeout(() => {
+                let groupName = this.system.currentGroupName;
+                let ip = this.inputIp;
+                let domain = this.inputHost;
+                console.log(groupName);
+                server.sendMessage("addHost", {groupName: groupName, ip: ip, domain: domain}, (message) => {
                     this.system.currentHosts.push({
-                        ip: this.inputIp,
-                        domain: this.inputHost,
-                        enabled: true,
-                        lineNumber: 1
+                        ip: ip,
+                        domain: domain,
+                        enabled: true
                     });
                     this.inputIp = '';
                     this.inputHost = '';
@@ -85,7 +88,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         message: 'Added successfully',
                         type: 'success'
                     });
-                }, 1000)
+                });
             },
             init: function () {
                 let _this = this;
@@ -144,8 +147,10 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             }
         },
         mounted() {
-            this.init();
-            this.loadIpPrepareList();
+            document.addEventListener('astilectron-ready',  () => {
+                this.init();
+                this.loadIpPrepareList();
+            })
         }
     });
 

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 func GetHostsFile() string {
@@ -103,4 +104,8 @@ func GetIntranetIp() string {
 		}
 	}
 	return ""
+}
+
+func GetNowTimestamp() int64 {
+	return time.Now().UnixNano() / 1e6
 }
