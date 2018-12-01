@@ -28,14 +28,14 @@ type Group struct {
 	Hosts   Hosts  `json:"hosts"`
 }
 
-type HostGroupData struct {
+type GroupConfig struct {
 	Name                 string
 	Enabled              bool
 	LastUpdatedTimestamp int64
 }
 
 type Config struct {
-	Groups               []HostGroupData
+	Groups               []GroupConfig
 	LastUpdatedTimestamp int64 //last timestamp of hosts data was updated
 	LastSyncTimestamp    int64 //last timestamp of refresh hosts data to system hosts
 }
@@ -112,7 +112,7 @@ func (h *Manager) loadConfig() {
 		h.loadConfigFromFile()
 	} else {
 		h.Config = Config{
-			Groups:               []HostGroupData{{Name: h.DefaultGroupName, Enabled: true, LastUpdatedTimestamp: 0}},
+			Groups:               []GroupConfig{{Name: h.DefaultGroupName, Enabled: true, LastUpdatedTimestamp: 0}},
 			LastUpdatedTimestamp: 0,
 			LastSyncTimestamp:    0,
 		}
@@ -280,18 +280,40 @@ func (h *Manager) FindGroup(groupName string) *Group {
 	return &h.Groups[index]
 }
 
+func (h *Manager) EnableGroup(groupName string, enabled bool) bool {
+	config := h.FindGroupConfig(groupName)
+	if config == nil {
+		return false
+	}
+	config.Enabled = enabled
+	h.Config.LastUpdatedTimestamp = GetNowTimestamp()
+	h.persistConfig()
+	return true
+}
+
+
+
 //refresh config
 //when group has changed, remember call this func to updated config file and var `h.Config`.
 func (h *Manager) refreshGroupsConfig(groupName string) {
 	timestamp := GetNowTimestamp()
+	config := h.FindGroupConfig(groupName)
+	if config == nil {
+		return ;
+	}
 	h.Config.LastUpdatedTimestamp = timestamp
+	config.LastUpdatedTimestamp = timestamp
+}
+
+//find host group data
+func (h *Manager) FindGroupConfig(groupName string) *GroupConfig {
 	for i, _ := range h.Config.Groups {
 		config := &h.Config.Groups[i]
 		if config.Name == groupName {
-			config.LastUpdatedTimestamp = timestamp
+			return config
 		}
 	}
-	fmt.Println(h.Config)
+	return nil
 }
 
 func (h *Manager) persistGroup(group *Group) {
@@ -320,7 +342,7 @@ func (h *Manager) persistConfig() {
 }
 
 func (h *Manager) addGroupToConfig(groupName string, enabled bool, lastUpdatedTimestamp int64) {
-	h.Config.Groups = append(h.Config.Groups, HostGroupData{
+	h.Config.Groups = append(h.Config.Groups, GroupConfig{
 		Name:                 groupName,
 		Enabled:              enabled,
 		LastUpdatedTimestamp: lastUpdatedTimestamp,

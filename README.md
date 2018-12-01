@@ -5,3 +5,6 @@
 * add function
 * edit function
 * delete function
+* enable/disable group
+* add group
+* edit group name

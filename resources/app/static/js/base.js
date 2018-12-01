@@ -57,17 +57,27 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 })
             },
             groupSwitch: function (value) {
-                if (value) {
-                    this.$message({
-                        message: '启用分组成功',
-                        type: 'success'
-                    });
-                } else {
-                    this.$message({
-                        message: '关闭分组成功',
-                        type: 'info'
-                    });
-                }
+                server.sendMessage("enableGroup", {groupName: this.system.currentGroupName, enabled: value}, (message) => {
+                    if (message.code === 1) {
+                        if (value) {
+                            this.$message({
+                                message: 'The group has been enabled.',
+                                type: 'success'
+                            });
+                        } else {
+                            this.$message({
+                                message: 'The group has been disabled.',
+                                type: 'info'
+                            });
+                        }
+                    } else {
+                        this.$message({
+                            message: 'An error occured while your operating',
+                            type: 'error'
+                        });
+                    }
+                });
+
             },
             addHost: function () {
                 if (this.system.currentGroupName === SYSTEM_HOSTS_NAME) {
@@ -127,12 +137,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     "updateHost",
                     {groupName: groupName, ip: host.ip, domain: host.domain, enabled: value, index: index},
                     (message) => {
-                        if (message.code === 1) {
-                            this.$message({
-                                message: 'Updated successfully',
-                                type: 'success'
-                            });
-                        } else {
+                        if (message.code !== 1) {
                             //it turns switch button to old status
                             this.system.currentHosts[index].enabled = !value;
                             this.$message({

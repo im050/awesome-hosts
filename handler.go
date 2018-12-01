@@ -41,6 +41,12 @@ func handleMessages(w *astilectron.Window, mi bootstrap.MessageIn) (payload inte
 		} else {
 			payload = ElectronResponse(0, "failed", nil)
 		}
+	case "enableGroup":
+		if m.EnableGroup(data["groupName"].(string), data["enabled"].(bool)) {
+			payload = ElectronResponse(1, "success", nil)
+		} else {
+			payload = ElectronResponse(0, "failed", nil)
+		}
 	}
 
 	return

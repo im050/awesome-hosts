@@ -11,6 +11,7 @@
 <div id="app" v-loading.fullscreen.lock="fullscreenLoading" v-cloak>
     <el-container>
         <el-aside width="200px" class="unselectable">
+            <div class="aside-controller"></div>
             <ul class="list">
                 <li :class="item.active ? 'current' : '' " v-for="item in hostGroups" @click="changeGroup(item.name)">
                     <i class="fa fa-lg"
