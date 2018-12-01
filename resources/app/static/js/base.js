@@ -197,7 +197,8 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             needPassword: function (payload) {
                 this.$prompt('In order to sync hosts file you have to type in the administrator password.', 'Password', {
                     confirmButtonText: 'Confirm',
-                    cancelButtonText: 'Cancel'
+                    cancelButtonText: 'Cancel',
+                    inputType: 'password'
                 }).then(({ value }) => {
                     server.sendMessage(payload, {password: value}, (message) => {
                         if (message.code == 1) {
