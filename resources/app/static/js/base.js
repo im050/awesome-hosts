@@ -70,16 +70,29 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 }
             },
             addHost: function () {
-                this.addHostLoading = true;
-                let groupName = this.system.currentGroupName;
+                if (this.system.currentGroupName === SYSTEM_HOSTS_NAME) {
+                    return ;
+                }
                 let ip = this.inputIp;
                 let domain = this.inputHost;
+                if (ip === '' || domain === '') {
+                    this.$message({
+                        message: "IP or Domain was empty.",
+                        type: "error"
+                    });
+                    return ;
+                }
+
+                let groupName = this.system.currentGroupName;
+                this.addHostLoading = true;
                 server.sendMessage("addHost", {groupName: groupName, ip: ip, domain: domain}, (message) => {
                     this.system.currentHosts.push({
                         ip: ip,
                         domain: domain,
                         enabled: true
                     });
+                    //focus on ip input
+                    this.$refs.ipInput.focus();
                     this.inputIp = '';
                     this.inputHost = '';
                     this.addHostLoading = false;
