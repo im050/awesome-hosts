@@ -13,7 +13,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
     let system = {
         isSystemHosts: true,
         currentGroupName: '',
-        currentHosts: [],
+        currentHosts: ["a"],
         systemHosts: []
     };
     const SYSTEM_HOSTS_NAME = "System Hosts";
@@ -22,8 +22,8 @@ Server.prototype.sendMessage = function (name, payload, callback) {
         el: '#app',
         data: {
             currentPage: '',
-            hostsLoading: true,
-            fullscreenLoading: true,
+            hostsLoading: false,
+            fullscreenLoading:  false,
             addHostLoading: false,
             hostGroups: [],
             inputIp: '',

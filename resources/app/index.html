@@ -84,20 +84,10 @@
                     <el-table-column
                             resizable="true"
                             label="-"
-                            width="80"
+                            width="50"
                             align="center"
                     >
                         <template slot-scope="scope">
-                            <el-dropdown :hide-on-click="false">
-                                <span class="el-dropdown-link">
-                                <i class="el-icon-search"></i>
-                                </span>
-                                <el-dropdown-menu slot="dropdown">
-                                    <el-dropdown-item>查找相同IP</el-dropdown-item>
-                                    <el-dropdown-item>查找相同domain</el-dropdown-item>
-                                </el-dropdown-menu>
-                            </el-dropdown>
-                            <span class="col-split"></span>
                             <i class="el-icon-delete"></i>
                         </template>
                     </el-table-column>
