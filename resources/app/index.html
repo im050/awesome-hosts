@@ -46,7 +46,9 @@
                         <template slot-scope="scope">
                             <el-switch
                                     v-model="scope.row.enabled"
+                                    :disabled="system.isSystemHosts"
                                     active-color="#13ce66"
+                                    @change="changeHost($event, scope.$index)"
                                     inactive-color="#ff4949">
                             </el-switch>
                         </template>
@@ -60,7 +62,7 @@
                                     placement="top"
                                     width="200"
                                     trigger="click">
-                                <el-input v-model="scope.row.ip" placeholder="请输入内容"></el-input>
+                                <el-input :disabled="system.isSystemHosts" v-model="scope.row.ip" placeholder="请输入内容"></el-input>
                                 <span class="edit-column" slot="reference">{{ scope.row.ip }}</span>
                             </el-popover>
                         </template>
@@ -74,7 +76,7 @@
                                     placement="top"
                                     width="200"
                                     trigger="click">
-                                <el-input v-model="scope.row.domain" placeholder="请输入内容"></el-input>
+                                <el-input :disabled="system.isSystemHosts" v-model="scope.row.domain" placeholder="请输入内容"></el-input>
                                 <span class="edit-column" slot="reference">{{ scope.row.domain }}</span>
                             </el-popover>
                         </template>
@@ -120,7 +122,7 @@
                             @keyup.enter.native="addHost"
                             clearable>
                     </el-input>
-                    <el-button icon="el-icon-plus" @click="addHost" :loading="addHostLoading">Add</el-button><el-button icon="el-icon-search">Search</el-button>
+                    <el-button icon="el-icon-plus" @click="addHost" :disabled="system.isSystemHosts" :loading="addHostLoading">Add</el-button><el-button icon="el-icon-search">Search</el-button>
                 </div>
             </el-footer>
         </el-container>

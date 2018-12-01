@@ -15,39 +15,44 @@ type Response struct {
 }
 
 func handleMessages(w *astilectron.Window, mi bootstrap.MessageIn) (payload interface{}, err error) {
-	var data map[string]string
-	data = make(map[string]string, 0)
+	var data map[string]interface{}
+	data = make(map[string]interface{}, 0)
 	if err = json.Unmarshal(mi.Payload, &data); err != nil {
 		payload = err.Error()
 		fmt.Println(err)
 		return
 	}
+	fmt.Println(data)
 	switch mi.Name {
-	case "event.name":
-		// Unmarshal payload
-		var s string
-		if err = json.Unmarshal(mi.Payload, &s); err != nil {
-			payload = err.Error()
-			return
-		}
-		fmt.Println(s, mi.Payload, 111)
-		payload = s + " world"
 	case "list":
-		payload = m.SystemHosts
+		payload = ElectronResponse(1, "success", m.SystemHosts)
 	case "groups":
-		payload = m.Groups
+		payload = ElectronResponse(1, "success", m.Groups)
 	case "intranet":
-		payload = manager.GetIntranetIp()
+		payload = ElectronResponse(1, "success", manager.GetIntranetIp())
 	case "addHost":
-		fmt.Println(data)
-		m.AddHost(data["groupName"], manager.Host{IP: data["ip"], Domain: data["domain"], Enabled: true})
+		m.AddHost(data["groupName"].(string), manager.Host{IP: data["ip"].(string), Domain: data["domain"].(string), Enabled: true})
 		payload = ElectronResponse(1, "success", nil)
 		default:
-		payload = "not found"
+		payload = ElectronResponse(404, "Not Found", nil)
+	case "updateHost":
+		if m.UpdateHost(data["groupName"].(string), int(data["index"].(float64)), data["ip"].(string), data["domain"].(string), data["enabled"].(bool)) {
+			payload = ElectronResponse(1, "success", nil)
+		} else {
+			payload = ElectronResponse(0, "failed", nil)
+		}
 	}
 
 	return
 }
+
+//func GetParams(data map[string]interface{}, name string) interface{} {
+//	v, ok := data[name]
+//	if !ok {
+//		return nil
+//	}
+//	return v
+//}
 
 func ElectronResponse(code int, message string, payload interface{}) Response {
 	return Response{Code: code, Message: message, Payload: payload}

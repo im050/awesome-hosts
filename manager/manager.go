@@ -233,26 +233,51 @@ func (h *Manager) GetGroups() []Group {
 
 //Add host to Group
 func (h *Manager) AddHost(groupName string, host Host) bool {
+	group := h.FindGroup(groupName)
+	//when found group
+	if group == nil {
+		return false
+	}
+	group.Hosts = append(group.Hosts, host)
+	//save group data to file
+	h.persistGroup(group)
+	//refresh groups config order by name of group
+	h.refreshGroupsConfig(group.Name)
+	h.persistConfig()
+	return true
+}
+
+func (h *Manager) UpdateHost(groupName string, index int, ip string, domain string, enabled bool) bool {
+	group := h.FindGroup(groupName)
+	if (index + 1) > len(group.Hosts) {
+		return false
+	}
+	host := &group.Hosts[index]
+	host.Enabled = enabled
+	host.IP = ip
+	host.Domain = domain
+	//save group data to file
+	h.persistGroup(group)
+	//refresh groups config order by name of group
+	h.refreshGroupsConfig(group.Name)
+	h.persistConfig()
+	return true
+}
+
+//find group with group name and return a pointer
+func (h *Manager) FindGroup(groupName string) *Group {
 	index := -1
 	for i, _ := range h.Groups {
 		group := &h.Groups[i]
 		if group.Name != groupName {
 			continue
 		}
-		group.Hosts = append(group.Hosts, host)
 		index = i
 	}
-	//when found group
 	if index == -1 {
-		return false
+		return nil
 	}
-	fmt.Println("Updated Group:", h.Groups[index])
-	//save group data to file
-	h.persistGroup(h.Groups[index])
-	//refresh groups config order by name of group
-	h.refreshGroupsConfig(h.Groups[index].Name)
-	h.persistConfig()
-	return true
+	return &h.Groups[index]
 }
 
 //refresh config
@@ -269,7 +294,7 @@ func (h *Manager) refreshGroupsConfig(groupName string) {
 	fmt.Println(h.Config)
 }
 
-func (h *Manager) persistGroup(group Group) {
+func (h *Manager) persistGroup(group *Group) {
 	groupName := group.Name
 	filePath := h.hostsDir + "/" + GetHostFileName(groupName)
 	str := ""

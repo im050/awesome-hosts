@@ -3,16 +3,15 @@ let Server = function () {
 
 Server.prototype.sendMessage = function (name, payload, callback) {
     // This will send a message to Go
-    console.log({name:  name, payload:payload})
     astilectron.sendMessage({name: name, payload: payload}, function (message) {
-        console.log("receive:");
         console.log(message);
-        callback(message)
+        callback(message.payload)
     });
 };
 
 (function () {
     let system = {
+        isSystemHosts: true,
         currentGroupName: '',
         currentHosts: [],
         systemHosts: []
@@ -22,6 +21,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
     let app = new Vue({
         el: '#app',
         data: {
+            currentPage: '',
             hostsLoading: true,
             fullscreenLoading: true,
             addHostLoading: false,
@@ -74,7 +74,6 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 let groupName = this.system.currentGroupName;
                 let ip = this.inputIp;
                 let domain = this.inputHost;
-                console.log(groupName);
                 server.sendMessage("addHost", {groupName: groupName, ip: ip, domain: domain}, (message) => {
                     this.system.currentHosts.push({
                         ip: ip,
@@ -102,7 +101,36 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     console.log(results);
                 });
             },
+            changeHost: function (value, index) {
+                let groupName = this.system.currentGroupName;
+                let host = this.system.currentHosts[index];
+                if (host === null) {
+                    this.$message({
+                        message: 'Badly Host',
+                        type: 'error'
+                    });
+                }
+                server.sendMessage(
+                    "updateHost",
+                    {groupName: groupName, ip: host.ip, domain: host.domain, enabled: value, index: index},
+                    (message) => {
+                        if (message.code === 1) {
+                            this.$message({
+                                message: 'Updated successfully',
+                                type: 'success'
+                            });
+                        } else {
+                            //it turns switch button to old status
+                            this.system.currentHosts[index].enabled = !value;
+                            this.$message({
+                                message: 'An error occured while updating host',
+                                type: 'error'
+                            });
+                        }
+                });
+            },
             changeGroup: function (groupName) {
+                this.system.isSystemHosts = (groupName === SYSTEM_HOSTS_NAME);
                 for (let i in this.hostGroups) {
                     let item = this.hostGroups[i];
                     if (groupName === item.name) {
@@ -136,6 +164,9 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 let _this = this;
                 return new Promise((resolve) => {
                     server.sendMessage('groups', {}, (message) => {
+                        if (message.payload === null) {
+                            message.payload = []
+                        }
                         _this.hostGroups = message.payload;
                         _this.hostGroups.unshift({
                             name: SYSTEM_HOSTS_NAME,
@@ -153,5 +184,4 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             })
         }
     });
-
 })();
