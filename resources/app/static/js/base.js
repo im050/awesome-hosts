@@ -17,15 +17,17 @@ Server.prototype.sendMessage = function (name, payload, callback) {
         currentHosts: [],
         systemHosts: []
     };
+    const SYSTEM_HOSTS_NAME = "System Hosts";
     let server = new Server();
     let app = new Vue({
         el: '#app',
         data: {
             hostsLoading: true,
             fullscreenLoading: true,
+            addHostLoading: false,
             hostGroups: [],
-            addIp: '',
-            addHost: '',
+            inputIp: '',
+            inputHost: '',
             system: system,
             ipPrepareList: []
         },
@@ -67,12 +69,30 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     });
                 }
             },
+            addHost: function () {
+                this.addHostLoading = true;
+                setTimeout(() => {
+                    this.system.currentHosts.push({
+                        ip: this.inputIp,
+                        domain: this.inputHost,
+                        enabled: true,
+                        lineNumber: 1
+                    });
+                    this.inputIp = '';
+                    this.inputHost = '';
+                    this.addHostLoading = false;
+                    this.$message({
+                        message: 'Added successfully',
+                        type: 'success'
+                    });
+                }, 1000)
+            },
             init: function () {
                 let _this = this;
-                Promise.all([this.getList("System Hosts"), this.getHostGroups()]).then((results) => {
+                Promise.all([this.getList(SYSTEM_HOSTS_NAME), this.getHostGroups()]).then((results) => {
                     _this.hostGroups[0].active = true;
                     _this.system.currentGroupName = _this.hostGroups[0].name;
-                    setTimeout(() => function () {
+                    setTimeout(() => {
                         _this.fullscreenLoading = false;
                         _this.hostsLoading = false;
                     }, 1000);
@@ -84,7 +104,9 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     let item = this.hostGroups[i];
                     if (groupName === item.name) {
                         item.active = true;
-                        this.system.currentHosts = (groupName === "System Hosts") ? this.system.systemHosts : item.hosts;
+                        this.system.currentHosts = (groupName === SYSTEM_HOSTS_NAME)
+                            ? this.system.systemHosts :
+                            (item.hosts === null ? [] : item.hosts);
                         this.system.currentGroupName = item.name;
                     } else {
                         item.active = false;
@@ -95,8 +117,13 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 let _this = this;
                 return new Promise((resolve) => {
                     server.sendMessage("list", {type: type}, (message) => {
+                        if (message.payload === null) {
+                            message.payload = [];
+                        }
                         _this.system.currentHosts = message.payload;
-                        _this.system.systemHosts = message.payload;
+                        if (type === SYSTEM_HOSTS_NAME) {
+                            _this.system.systemHosts = message.payload;
+                        }
                         _this.hostsLoading = false;
                         resolve(true)
                     });
@@ -108,7 +135,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     server.sendMessage('groups', {}, (message) => {
                         _this.hostGroups = message.payload;
                         _this.hostGroups.unshift({
-                            name: "System Hosts",
+                            name: SYSTEM_HOSTS_NAME,
                             active: false,
                         });
                         resolve(true);

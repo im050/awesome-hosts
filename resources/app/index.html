@@ -8,7 +8,7 @@
     <link href="static/css/app.css" rel="stylesheet">
 </head>
 <body>
-<div id="app" v-loading.fullscreen.lock="fullscreenLoading">
+<div id="app" v-loading.fullscreen.lock="fullscreenLoading" v-cloak>
     <el-container>
         <el-aside width="200px" class="unselectable">
             <ul class="list">
@@ -32,6 +32,7 @@
                         v-loading="hostsLoading"
                         stripe
                         border
+                        empty-text="No results"
                         height="100%"
                         style="width: 100%; ">
                     <el-table-column
@@ -102,7 +103,7 @@
                 <div class="add-panel">
                     <el-autocomplete
                             class="inline-input"
-                            v-model="addIp"
+                            v-model="inputIp"
                             :fetch-suggestions="querySearch"
                             prefix-icon="el-icon-location-outline"
                             @select="handleSelect"
@@ -111,11 +112,11 @@
                     ></el-autocomplete>
                     <el-input
                             placeholder="Domain"
-                            v-model="addHost"
+                            v-model="inputHost"
                             prefix-icon="el-icon-fa-desktop"
                             clearable>
                     </el-input>
-                    <el-button icon="el-icon-plus"></el-button>
+                    <el-button icon="el-icon-plus" @click="addHost" :loading="addHostLoading">Add</el-button><el-button icon="el-icon-search">Search</el-button>
                 </div>
             </el-footer>
         </el-container>

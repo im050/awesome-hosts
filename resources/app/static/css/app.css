@@ -1,7 +1,7 @@
 html, body {
     margin: 0;
     padding: 0;
-    background: rgb(32, 34, 46);
+    background: #fff;
     font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 }
 html, body, .framework, .framework>.row {
@@ -188,4 +188,8 @@ td.el-table_1_column_4 i {
     */
     -ms-user-select: none;
     user-select: none;
+}
+
+.el-footer .el-button+.el-button {
+    margin-left: 5px;
 }
