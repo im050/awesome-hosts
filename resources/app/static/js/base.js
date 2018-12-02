@@ -25,11 +25,21 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             hostsLoading: false,
             fullscreenLoading:  false,
             addHostLoading: false,
+            addGroupLoading: false,
             hostGroups: [],
             inputIp: '',
             inputHost: '',
             system: system,
-            ipPrepareList: []
+            ipPrepareList: [],
+            createNewGroupDialog: false,
+            newGroupForm: {
+                data: {
+                    name: '',
+                    hosts: '',
+                    enabled: true,
+                },
+                width: '80px'
+            }
         },
         methods: {
             querySearch(queryString, show) {
@@ -55,6 +65,25 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     }
                     this.ipPrepareList = data;
                 })
+            },
+            addGroup: function () {
+                server.sendMessage("addGroup", {groupName: this.system}, (message) => {
+
+                });
+            },
+            importHosts: function (event) {
+                if (event.file.type !== '' && event.file.type.indexOf("text") === -1) {
+                    this.$alert("Not a text file, it\'s " + event.file.type, 'Warning', {
+                        confirmButtonText: 'OK',
+                        type: 'error'
+                    });
+                    return ;
+                }
+                let reader = new FileReader();
+                reader.onload = (file) => {
+                    this.newGroupForm.data.hosts = file.target.result;
+                };
+                reader.readAsText(event.file);
             },
             groupSwitch: function (value) {
                 server.sendMessage("enableGroup", {groupName: this.system.currentGroupName, enabled: value}, (message) => {

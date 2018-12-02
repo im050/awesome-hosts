@@ -14,7 +14,7 @@
             <div class="aside-controller">
                 <el-button-group>
                     <el-tooltip content="Add Group" placement="top">
-                        <el-button type="primary" icon="el-icon-plus"></el-button>
+                        <el-button type="primary" @click="createNewGroupDialog = true" icon="el-icon-plus"></el-button>
                     </el-tooltip>
                     <el-tooltip content="Clear DNS Cache" placement="top">
                         <el-button type="primary" icon="el-icon-refresh"></el-button>
@@ -136,6 +136,42 @@
             </el-footer>
         </el-container>
     </el-container>
+    <el-dialog title="New Group" :visible.sync="createNewGroupDialog">
+        <el-form :model="newGroupForm.data">
+            <el-form-item label="Name" :label-width="newGroupForm.width">
+                <el-input v-model="newGroupForm.data.name" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="Hosts" :label-width="newGroupForm.width">
+                <el-input
+                        type="textarea"
+                        :autosize="{ minRows: 2, maxRows: 4}"
+                        placeholder="Your hosts enter here line by line, just like the hosts file."
+                        v-model="newGroupForm.data.hosts">
+                </el-input>
+                <span></span>
+            </el-form-item>
+            <el-form-item :label-width="newGroupForm.width">
+                <el-upload
+                    action="#"
+                    :show-file-list="false"
+                    :http-request="importHosts"
+                >
+                    <el-button size="small">Import</el-button>
+                </el-upload>
+            </el-form-item>
+            <el-form-item label="Enabled" :label-width="newGroupForm.width">
+                <el-switch
+                        v-model="newGroupForm.data.enabled"
+                        active-color="#13ce66"
+                        inactive-color="#ff4949">
+                </el-switch>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="createNewGroupDialog = false">Cancel</el-button>
+            <el-button type="primary" :loading="addGroupLoading" @click="addGroup">Add</el-button>
+        </div>
+    </el-dialog>
 </div>
 </body>
 <!-- import Vue before Element -->
