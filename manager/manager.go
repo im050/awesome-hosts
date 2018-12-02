@@ -12,6 +12,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 )
@@ -26,16 +27,18 @@ type Hosts []Host //line=>number
 type Groups []Group
 
 type Group struct {
-	Name    string `json:"name"`
-	Enabled bool   `json:"enabled"`
-	Active  bool   `json:"active"`
-	Hosts   Hosts  `json:"hosts"`
+	Name      string `json:"name"`
+	Enabled   bool   `json:"enabled"`
+	Active    bool   `json:"active"`
+	Hosts     Hosts  `json:"hosts"`
+	CreatedAt int64  `json:"createAt"`
 }
 
 type GroupConfig struct {
 	Name                 string
 	Enabled              bool
 	LastUpdatedTimestamp int64
+	CreatedTimestamp     int64
 }
 
 type Config struct {
@@ -54,6 +57,7 @@ type Manager struct {
 	TempFileName     string
 	Window           *astilectron.Window
 	SudoPassword     string
+	GroupConfigIndex map[string]*GroupConfig
 }
 
 func New(hostsDir string) *Manager {
@@ -97,7 +101,7 @@ func (m *Manager) initSystemHosts() {
 	defer file.Close()
 	hosts := m.GetHosts(file)
 	m.SystemHosts = hosts
-	exists, err := PathExists(m.hostsDir + "/" + GetHostFileName(m.DefaultGroupName))
+	exists, err := PathExists(m.GetGroupFilePath(m.DefaultGroupName))
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(0)
@@ -105,7 +109,11 @@ func (m *Manager) initSystemHosts() {
 	if exists {
 		return
 	}
-	m.WriteHosts(GetHostFileName(m.DefaultGroupName), m.SystemHosts)
+	m.WriteHosts(m.GetGroupFilePath(m.DefaultGroupName), m.SystemHosts)
+}
+
+func (m *Manager) GetGroupFilePath(groupName string) string {
+	return m.GetHostDir() + "/" + groupName + ".host"
 }
 
 func (m *Manager) initGroups() {
@@ -123,7 +131,7 @@ func (m *Manager) loadConfig() {
 		m.loadConfigFromFile()
 	} else {
 		m.Config = Config{
-			Groups:               []GroupConfig{{Name: m.DefaultGroupName, Enabled: true, LastUpdatedTimestamp: 0}},
+			Groups:               []GroupConfig{{Name: m.DefaultGroupName, Enabled: true, LastUpdatedTimestamp: 0, CreatedTimestamp: GetNowTimestamp()}},
 			LastUpdatedTimestamp: 0,
 			LastSyncTimestamp:    0,
 		}
@@ -143,54 +151,72 @@ func (m *Manager) GetHosts(file *os.File) Hosts {
 	var hosts []Host
 	for {
 		line, _, err := br.ReadLine()
-		lineString := strings.TrimSpace(string(line))
 		if err == io.EOF {
 			break
 		}
-		//if empty, continue
-		if len(lineString) == 0 {
+		host, ok := m.explainHostsLine(string(line))
+		if !ok {
 			continue
 		}
-		//if notice, continue
-		enabled := true
-		if strings.Index(lineString, "#") == 0 {
-			enabled = false
-		}
-		lineString = regexp.MustCompile(`\t+`).ReplaceAllLiteralString(lineString, " ")
-		reg := regexp.MustCompile(`\s+`)
-		hostSplit := reg.Split(lineString, -1)
-		//if domain nonexistent, continue
-		if len(hostSplit) < 2 {
-			continue
-		}
-		if !enabled {
-			hostSplit[0] = strings.TrimSpace(strings.TrimLeft(hostSplit[0], "#"))
-		}
-		IPv4Pattern := `((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)`
-		IPv6Pattern := `(([\da-fA-F]{1,4}):){8}`
-		//if not ip, continue
-		if !regexp.MustCompile(IPv4Pattern).MatchString(hostSplit[0]) && !regexp.MustCompile(IPv6Pattern).MatchString(hostSplit[0]) {
-			continue
-		}
-		hosts = append(hosts, Host{
-			Domain:  hostSplit[1],
-			IP:      hostSplit[0],
-			Enabled: enabled,
-		})
+		hosts = append(hosts, host)
 	}
 	return hosts
 }
 
-func (m *Manager) WriteContent(name string, content string) {
-	data := []byte(content)
-	err := ioutil.WriteFile(m.hostsDir+"/"+name, data, 0666)
-	if err != nil {
-		_, _ = fmt.Println("Write to file failed.", err)
-		os.Exit(0)
+func (m *Manager) explainHostsLine(line string) (Host, bool) {
+	lineString := strings.TrimSpace(line)
+	//if empty, continue
+	if len(lineString) == 0 {
+		return Host{}, false
 	}
+	//if notice, continue
+	enabled := true
+	if strings.Index(lineString, "#") == 0 {
+		enabled = false
+	}
+	lineString = regexp.MustCompile(`\t+`).ReplaceAllLiteralString(lineString, " ")
+	reg := regexp.MustCompile(`\s+`)
+	hostSplit := reg.Split(lineString, -1)
+	//if domain nonexistent, continue
+	if len(hostSplit) < 2 {
+		return Host{}, false
+	}
+	if !enabled {
+		hostSplit[0] = strings.TrimSpace(strings.TrimLeft(hostSplit[0], "#"))
+	}
+	IPv4Pattern := `((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)`
+	IPv6Pattern := `(([\da-fA-F]{1,4}):){8}`
+	//if not ip, continue
+	if !regexp.MustCompile(IPv4Pattern).MatchString(hostSplit[0]) && !regexp.MustCompile(IPv6Pattern).MatchString(hostSplit[0]) {
+		return Host{}, false
+	}
+	return Host{
+		Domain:  hostSplit[1],
+		IP:      hostSplit[0],
+		Enabled: enabled,
+	}, true
 }
 
-func (m *Manager) WriteHosts(name string, hosts Hosts) {
+func (m *Manager) explainHostsString(content string) Hosts {
+	var hosts []Host
+	lines := strings.Split(content, GetLineSeparator())
+	for _, line := range lines {
+		host, ok := m.explainHostsLine(line)
+		if !ok {
+			continue
+		}
+		hosts = append(hosts, host)
+	}
+	return hosts
+}
+
+func (m *Manager) WriteContent(filename string, content string) error {
+	data := []byte(content)
+	err := ioutil.WriteFile(filename, data, 0666)
+	return err
+}
+
+func (m *Manager) WriteHosts(name string, hosts Hosts) error {
 	hostsContent := ""
 	eol := GetLineSeparator()
 	for _, host := range hosts {
@@ -199,17 +225,22 @@ func (m *Manager) WriteHosts(name string, hosts Hosts) {
 		}
 		hostsContent += host.IP + " " + host.Domain + eol
 	}
-	m.WriteContent(name, hostsContent)
+	return m.WriteContent(name, hostsContent)
+}
+
+func (m *Manager) initGroupConfigIndex() {
+	m.GroupConfigIndex = make(map[string]*GroupConfig)
+	for i, _ := range m.Config.Groups {
+		c := &m.Config.Groups[i];
+		m.GroupConfigIndex[c.Name] = c
+	}
 }
 
 func (m *Manager) GetGroups() []Group {
 	var groups []Group
-	groupEnableMap := map[string]bool{}
-	for _, c := range m.Config.Groups {
-		groupEnableMap[c.Name] = c.Enabled
-	}
-	fmt.Println(groupEnableMap)
+	m.initGroupConfigIndex()
 	files, _ := ioutil.ReadDir(m.hostsDir)
+	timestamp := GetNowTimestamp()
 	for _, f := range files {
 		groupInfo := strings.Split(f.Name(), ".")
 		if groupInfo[len(groupInfo)-1] != "host" {
@@ -220,13 +251,16 @@ func (m *Manager) GetGroups() []Group {
 			groupName = strings.Join(groupInfo[0:], ".")
 		}
 		var enabled bool
-		value, exists := groupEnableMap[groupName]
-		if !exists {
+		var createdTimestamp int64
+		gc := m.FindGroupConfig(groupName)
+		if gc == nil {
 			enabled = false
+			createdTimestamp = timestamp
 			//if group doesn't exists in config file, then add it.
-			m.addGroupToConfig(groupName, enabled, 0)
+			m.addGroupToConfig(groupName, enabled, 0, createdTimestamp)
 		} else {
-			enabled = value
+			enabled = gc.Enabled
+			createdTimestamp = gc.CreatedTimestamp
 		}
 		//read host file
 		file, err := os.Open(m.hostsDir + "/" + f.Name())
@@ -234,8 +268,14 @@ func (m *Manager) GetGroups() []Group {
 		ErrorAndExitWithLog(file.Close())
 		ErrorAndExitWithLog(err)
 		//append to groups
-		groups = append(groups, Group{Name: groupName, Enabled: enabled, Active: false, Hosts: hosts})
+		groups = append(groups, Group{Name: groupName, Enabled: enabled, Active: false, Hosts: hosts, CreatedAt: createdTimestamp})
 	}
+	fmt.Println("Before sort", groups)
+	sort.SliceStable(groups, func(i, j int) bool {
+		return groups[i].CreatedAt < groups[j].CreatedAt
+	})
+	fmt.Println("After sort", groups)
+
 	return groups
 }
 
@@ -310,6 +350,9 @@ func (m *Manager) syncStart() {
 			tmpHosts := ""
 			for _, config := range m.Config.Groups {
 				group := m.FindGroup(config.Name)
+				if group == nil {
+					continue
+				}
 				str := m.persistGroup(group)
 				if config.Enabled {
 					tmpHosts += "#Group Name: " + config.Name + GetLineSeparator()
@@ -338,18 +381,22 @@ func (m *Manager) refreshGroupsConfig(groupName string) {
 
 //find host group data
 func (m *Manager) FindGroupConfig(groupName string) *GroupConfig {
-	for i, _ := range m.Config.Groups {
-		config := &m.Config.Groups[i]
-		if config.Name == groupName {
-			return config
-		}
+	//for i, _ := range m.Config.Groups {
+	//	config := &m.Config.Groups[i]
+	//	if config.Name == groupName {
+	//		return config
+	//	}
+	//}
+	v, ok := m.GroupConfigIndex[groupName]
+	if !ok {
+		return nil
 	}
-	return nil
+	return v
 }
 
 func (m *Manager) persistGroup(group *Group) string {
 	groupName := group.Name
-	filePath := m.hostsDir + "/" + GetHostFileName(groupName)
+	filePath := m.GetGroupFilePath(groupName)
 	str := ""
 	for _, host := range group.Hosts {
 		enabled := ""
@@ -373,12 +420,14 @@ func (m *Manager) persistConfig() {
 	ErrorAndExitWithLog(err)
 }
 
-func (m *Manager) addGroupToConfig(groupName string, enabled bool, lastUpdatedTimestamp int64) {
+func (m *Manager) addGroupToConfig(groupName string, enabled bool, lastUpdatedTimestamp int64, createdTimestamp int64) {
 	m.Config.Groups = append(m.Config.Groups, GroupConfig{
 		Name:                 groupName,
 		Enabled:              enabled,
 		LastUpdatedTimestamp: lastUpdatedTimestamp,
+		CreatedTimestamp:     createdTimestamp,
 	})
+	m.GroupConfigIndex[groupName] = &m.Config.Groups[len(m.Config.Groups) - 1]
 }
 
 func (m *Manager) SyncSystemHosts() bool {
@@ -393,8 +442,13 @@ func (m *Manager) SyncSystemHostsWin() bool {
 	return true
 }
 
-func (m *Manager) AddGroup(name string, enabled bool, args ...string) bool {
-	
+func (m *Manager) AddGroup(name string, enabled bool, hosts string) bool {
+	timestamp := GetNowTimestamp()
+	m.addGroupToConfig(name, enabled, timestamp, timestamp)
+	group := Group{Name: name, Enabled: enabled, Hosts: m.explainHostsString(hosts)}
+	m.Groups = append(m.Groups, group)
+	m.Config.LastUpdatedTimestamp = timestamp
+	return true
 }
 
 //

@@ -23,7 +23,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
         data: {
             currentPage: '',
             hostsLoading: false,
-            fullscreenLoading:  false,
+            fullscreenLoading: false,
             addHostLoading: false,
             addGroupLoading: false,
             hostGroups: [],
@@ -66,9 +66,41 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     this.ipPrepareList = data;
                 })
             },
+            clearNewGroupForm: function () {
+                this.newGroupForm.data = {
+                    name: '',
+                    hosts: '',
+                    enabled: true
+                };
+                return this;
+            },
+            closeNewGroupDialog: function () {
+                this.createNewGroupDialog = false;
+            },
             addGroup: function () {
-                server.sendMessage("addGroup", {groupName: this.system}, (message) => {
-
+                server.sendMessage("addGroup", this.newGroupForm.data, (message) => {
+                    let groupName = this.newGroupForm.data.name;
+                    if (message.code === 1) {
+                        this.clearNewGroupForm().closeNewGroupDialog();
+                        this.hostGroups = message.payload;
+                        this.hostGroups.unshift({
+                            name: SYSTEM_HOSTS_NAME,
+                            active: false,
+                        });
+                        this.$message({
+                            message: `[${groupName}] Successfully added`,
+                            type: 'success'
+                        });
+                    } else {
+                        let msg = 'An error occured while your operating';
+                        if (message.code == -1) {
+                            msg = 'Group already exists'
+                        }
+                        this.$message({
+                            message: msg,
+                            type: 'error'
+                        });
+                    }
                 });
             },
             importHosts: function (event) {
@@ -77,7 +109,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         confirmButtonText: 'OK',
                         type: 'error'
                     });
-                    return ;
+                    return;
                 }
                 let reader = new FileReader();
                 reader.onload = (file) => {
@@ -86,7 +118,10 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 reader.readAsText(event.file);
             },
             groupSwitch: function (value) {
-                server.sendMessage("enableGroup", {groupName: this.system.currentGroupName, enabled: value}, (message) => {
+                server.sendMessage("enableGroup", {
+                    groupName: this.system.currentGroupName,
+                    enabled: value
+                }, (message) => {
                     if (message.code === 1) {
                         if (value) {
                             this.$message({
@@ -110,7 +145,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             },
             addHost: function () {
                 if (this.system.currentGroupName === SYSTEM_HOSTS_NAME) {
-                    return ;
+                    return;
                 }
                 let ip = this.inputIp;
                 let domain = this.inputHost;
@@ -119,7 +154,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         message: "IP or Domain was empty.",
                         type: "error"
                     });
-                    return ;
+                    return;
                 }
 
                 let groupName = this.system.currentGroupName;
@@ -174,17 +209,23 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                                 type: 'error'
                             });
                         }
-                });
+                    });
             },
             changeGroup: function (groupName) {
                 this.system.isSystemHosts = (groupName === SYSTEM_HOSTS_NAME);
+                console.log(this.hostGroups);
                 for (let i in this.hostGroups) {
                     let item = this.hostGroups[i];
                     if (groupName === item.name) {
                         item.active = true;
-                        this.system.currentHosts = (groupName === SYSTEM_HOSTS_NAME)
-                            ? this.system.systemHosts :
-                            (item.hosts === null ? [] : item.hosts);
+                        if (groupName === SYSTEM_HOSTS_NAME) {
+                            this.system.currentHosts = this.systemHosts;
+                        } else {
+                            if (item.hosts === null) {
+                                this.hostGroups[i].hosts = []
+                            }
+                            this.system.currentHosts = item.hosts;
+                        }
                         this.system.currentGroupName = item.name;
                     } else {
                         item.active = false;
@@ -228,7 +269,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     confirmButtonText: 'Confirm',
                     cancelButtonText: 'Cancel',
                     inputType: 'password'
-                }).then(({ value }) => {
+                }).then(({value}) => {
                     server.sendMessage(payload, {password: value}, (message) => {
                         if (message.code == 1) {
                             this.$message({
@@ -251,7 +292,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             }
         },
         mounted() {
-            document.addEventListener('astilectron-ready',  () => {
+            document.addEventListener('astilectron-ready', () => {
                 this.init();
                 this.loadIpPrepareList();
                 astilectron.onMessage((message) => {
