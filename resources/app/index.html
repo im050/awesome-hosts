@@ -11,7 +11,19 @@
 <div id="app" v-loading.fullscreen.lock="fullscreenLoading" v-cloak>
     <el-container>
         <el-aside width="200px" class="unselectable">
-            <div class="aside-controller"></div>
+            <div class="aside-controller">
+                <el-button-group>
+                    <el-tooltip content="Add Group" placement="top">
+                        <el-button type="primary" icon="el-icon-plus"></el-button>
+                    </el-tooltip>
+                    <el-tooltip content="Clear DNS Cache" placement="top">
+                        <el-button type="primary" icon="el-icon-refresh"></el-button>
+                    </el-tooltip>
+                    <el-tooltip content="Setting" placement="top">
+                        <el-button type="primary" icon="el-icon-setting"></el-button>
+                    </el-tooltip>
+                </el-button-group>
+            </div>
             <ul class="list">
                 <li :class="item.active ? 'current' : '' " v-for="item in hostGroups" @click="changeGroup(item.name)">
                     <i class="fa fa-lg"
@@ -63,7 +75,8 @@
                                     placement="top"
                                     width="200"
                                     trigger="click">
-                                <el-input :disabled="system.isSystemHosts" v-model="scope.row.ip" placeholder="请输入内容"></el-input>
+                                <el-input :disabled="system.isSystemHosts" v-model="scope.row.ip"
+                                          placeholder="请输入内容"></el-input>
                                 <span class="edit-column" slot="reference">{{ scope.row.ip }}</span>
                             </el-popover>
                         </template>
@@ -77,7 +90,8 @@
                                     placement="top"
                                     width="200"
                                     trigger="click">
-                                <el-input :disabled="system.isSystemHosts" v-model="scope.row.domain" placeholder="请输入内容"></el-input>
+                                <el-input :disabled="system.isSystemHosts" v-model="scope.row.domain"
+                                          placeholder="请输入内容"></el-input>
                                 <span class="edit-column" slot="reference">{{ scope.row.domain }}</span>
                             </el-popover>
                         </template>
@@ -114,7 +128,10 @@
                             @keyup.enter.native="addHost"
                             clearable>
                     </el-input>
-                    <el-button icon="el-icon-plus" @click="addHost" :disabled="system.isSystemHosts" :loading="addHostLoading">Add</el-button><el-button icon="el-icon-search">Search</el-button>
+                    <el-button icon="el-icon-plus" @click="addHost" :disabled="system.isSystemHosts"
+                               :loading="addHostLoading">Add
+                    </el-button>
+                    <el-button icon="el-icon-search">Search</el-button>
                 </div>
             </el-footer>
         </el-container>

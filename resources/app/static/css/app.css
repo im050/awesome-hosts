@@ -96,6 +96,29 @@ td.el-table_1_column_4 i {
     height: 60px;
 }
 
+.aside-controller .el-button-group {
+    float: right;
+    margin-top: 10px;
+    padding: 0 10px;
+}
+
+.aside-controller .el-button-group .el-button {
+    padding: 12px 16px;
+}
+
+.aside-controller .el-button-group .el-button--primary:focus, .aside-controller .el-button-group .el-button--primary:hover {
+    background: #2b3e51;
+    border-color: #2b3e51;
+    color: #fff;
+}
+
+.aside-controller .el-button-group .el-button--primary {
+    color: rgba(255, 255, 255, 0.7);
+    background-color: #1a2b3c;
+    border-color: #223241 !important;
+    font-weight: 100;
+}
+
 .list {
     color: #999;
     list-style: none;
