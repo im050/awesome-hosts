@@ -213,13 +213,12 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             },
             changeGroup: function (groupName) {
                 this.system.isSystemHosts = (groupName === SYSTEM_HOSTS_NAME);
-                console.log(this.hostGroups);
                 for (let i in this.hostGroups) {
                     let item = this.hostGroups[i];
                     if (groupName === item.name) {
                         item.active = true;
                         if (groupName === SYSTEM_HOSTS_NAME) {
-                            this.system.currentHosts = this.systemHosts;
+                            this.system.currentHosts = this.system.systemHosts;
                         } else {
                             if (item.hosts === null) {
                                 this.hostGroups[i].hosts = []

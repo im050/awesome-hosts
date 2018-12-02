@@ -2,6 +2,8 @@ package manager
 
 import (
 	"bufio"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/asticode/go-astilectron"
@@ -359,12 +361,34 @@ func (m *Manager) syncStart() {
 					tmpHosts += str + GetLineSeparator() + GetLineSeparator()
 				}
 			}
-			err := ioutil.WriteFile(m.hostsDir+"/"+m.TempFileName, []byte(tmpHosts), 0666)
+			fmt.Println("updated")
+			//check system hosts file content is the same as tmpHosts
+			if !m.needSync(tmpHosts) {
+				continue
+			}
+			err := m.WriteContent(m.GetHostDir()+"/"+m.TempFileName, tmpHosts);
 			ErrorAndExitWithLog(err)
 			m.SyncSystemHosts()
-			fmt.Println("updated")
+			fmt.Println("sync hosts")
 		}
 	}()
+}
+
+func (m *Manager) needSync(tmpHosts string) bool {
+	systemHostFile, err := os.Open(GetHostsFile())
+	defer systemHostFile.Close()
+	ErrorAndExitWithLog(err)
+	systemHostMD5 := md5.New()
+	_, ioErr := io.Copy(systemHostMD5, systemHostFile)
+	ErrorAndExitWithLog(ioErr)
+	systemHostMD5String := hex.EncodeToString(systemHostMD5.Sum(nil))
+	tempHostMD5 := md5.New()
+	tempHostMD5.Write([]byte(tmpHosts))
+	tempHostMD5String := hex.EncodeToString(tempHostMD5.Sum(nil))
+	if systemHostMD5String == tempHostMD5String {
+		return false
+	}
+	return true
 }
 
 //refresh config
@@ -427,7 +451,7 @@ func (m *Manager) addGroupToConfig(groupName string, enabled bool, lastUpdatedTi
 		LastUpdatedTimestamp: lastUpdatedTimestamp,
 		CreatedTimestamp:     createdTimestamp,
 	})
-	m.GroupConfigIndex[groupName] = &m.Config.Groups[len(m.Config.Groups) - 1]
+	m.GroupConfigIndex[groupName] = &m.Config.Groups[len(m.Config.Groups)-1]
 }
 
 func (m *Manager) SyncSystemHosts() bool {
