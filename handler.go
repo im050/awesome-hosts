@@ -80,6 +80,11 @@ func handleMessages(w *astilectron.Window, mi bootstrap.MessageIn) (payload inte
 		}
 		m.DeleteGroup(data["groupName"].(string))
 		payload = ElectronResponse(1, "success", m.Groups)
+	case "deleteHost":
+		index := int(data["index"].(float64))
+		groupName :=data["groupName"].(string)
+		m.DeleteHost(groupName, index)
+		payload = ElectronResponse(1, "success", nil)
 	}
 
 	return

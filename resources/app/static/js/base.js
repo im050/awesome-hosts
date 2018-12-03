@@ -21,7 +21,10 @@ Server.prototype.sendMessage = function (name, payload, callback) {
     let app = new Vue({
         el: '#app',
         data: {
-            currentPage: '',
+            page: {
+                pageSize: 100,
+                currentPage: 1
+            },
             hostsLoading: false,
             fullscreenLoading: false,
             addHostLoading: false,
@@ -50,6 +53,12 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             }
         },
         methods: {
+            // handleSizeChange: function (size) {
+            //     this.pagesize = size;
+            // },
+            handleCurrentChange: function(currentPage){
+                this.page.currentPage = currentPage;
+            },
             querySearch(queryString, show) {
                 let ipPrepareList = this.ipPrepareList;
                 let results = queryString ? ipPrepareList.filter(this.createFilter(queryString)) : ipPrepareList;
@@ -240,6 +249,10 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             },
             init: function () {
                 let _this = this;
+                //
+                // for (let i= 0; i<500; i++) {
+                //     this.system.currentHosts.push({ip:"127.0.0.1"+i, domain:"hello", enabled: true})
+                // }
                 Promise.all([this.getList(SYSTEM_HOSTS_NAME), this.getHostGroups()]).then((results) => {
                     _this.hostGroups[0].active = true;
                     _this.system.currentGroupName = _this.hostGroups[0].name;
@@ -250,8 +263,12 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     console.log(results);
                 });
             },
+            fixIndexOffset: function(index) {
+                return (this.page.currentPage - 1) * this.page.pageSize + index
+            },
             changeHost: function (value, index) {
                 let groupName = this.system.currentGroupName;
+                index = this.fixIndexOffset(index);
                 let host = this.system.currentHosts[index];
                 if (host === null) {
                     this.$message({
@@ -273,8 +290,26 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         }
                     });
             },
+            deleteHost: function(index) {
+                index = this.fixIndexOffset(index);
+                let groupName = this.system.currentGroupName;
+                if (groupName === SYSTEM_HOSTS_NAME) {
+                    return ;
+                }
+                server.sendMessage("deleteHost", {groupName: groupName, index: index}, (message) => {
+                    if (message.code === 1) {
+                        for (let i in this.hostGroups) {
+                            let item = this.hostGroups[i];
+                            if (item.name === groupName) {
+                                item.hosts.splice(index, 1)
+                            }
+                        }
+                    }
+                });
+            },
             selectGroup: function (groupName) {
                 this.system.isSystemHosts = (groupName === SYSTEM_HOSTS_NAME);
+                this.page.currentPage = 1;
                 for (let i in this.hostGroups) {
                     let item = this.hostGroups[i];
                     if (groupName === item.name) {
@@ -367,7 +402,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     }
                 });
             })
-
         }
     });
+    app.init()
 })();

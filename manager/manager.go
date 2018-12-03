@@ -560,3 +560,12 @@ func (m *Manager) deleteGroupWithGroupName(groupName string) *Manager {
 	m.Groups = append(m.Groups[:index], m.Groups[index+1:]...)
 	return m
 }
+
+func (m *Manager) DeleteHost(groupName string, index int) {
+	group := m.FindGroup(groupName)
+	if group == nil {
+		return
+	}
+	group.Hosts = append(group.Hosts[:index], group.Hosts[index+1:]...)
+	m.Config.LastUpdatedTimestamp = GetNowTimestamp()
+}

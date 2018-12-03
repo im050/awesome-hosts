@@ -50,7 +50,7 @@
             </el-header>
             <el-main>
                 <el-table
-                        :data="system.currentHosts"
+                        :data="system.currentHosts.slice((page.currentPage - 1) * page.pageSize, page.currentPage * page.pageSize)"
                         v-loading="hostsLoading"
                         stripe
                         border
@@ -109,11 +109,22 @@
                             align="center"
                     >
                         <template slot-scope="scope">
-                            <i class="el-icon-delete"></i>
+                            <i class="el-icon-delete" @click="deleteHost(scope.$index)"></i>
                         </template>
                     </el-table-column>
                 </el-table>
+                <!-- pagination start -->
+                <el-pagination
+                        class="unselectable"
+                        background
+                        :page-size="page.pageSize"
+                        layout="slot, prev, pager, next"
+                        @current-change="handleCurrentChange"
+                        :total="this.system.currentHosts.length">
+                        <span  class="el-pagination__total">Total {{ system.currentHosts.length }} items</span>
 
+                </el-pagination>
+                <!-- pagination end -->
             </el-main>
             <el-footer class="unselectable">
                 <div class="add-panel">

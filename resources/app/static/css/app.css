@@ -19,11 +19,30 @@ html, body, .framework, .framework>.row {
     height: 100%;
 }
 .el-main {
-    background: rgb(41, 43, 55);
     height: 100%;
     position: relative;
-    padding: 0px;
+    padding: 0px 0 38px 0;
 }
+
+.el-pagination {
+    position: absolute;
+    bottom: 0;
+    background: #fff;
+    padding: 5px 20px;
+}
+
+.el-main .el-pager .number {
+    font-weight: normal;
+}
+
+.el-main .el-pagination .btn-next .el-icon, .el-pagination .btn-prev .el-icon {
+    font-weight: normal;
+}
+
+.el-pagination__total {
+    color: #ccc;
+}
+
 .el-header {
     background: rgb(243, 243, 243);
     border-bottom: 1px solid rgb(226, 226, 226);
