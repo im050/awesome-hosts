@@ -50,7 +50,7 @@ To bundle the app for more environments, add an `environments` key to the bundle
 
 * [SwitchHosts!](https://github.com/oldj/SwitchHosts) an App for managing hosts file  
 
-> Actually, I have to admit that I copy something from <SwitchHosts!>, because it is a mature product and perfect. and, the AwesomeHosts is my first project using Golang, I will improve and perfect it for learning and growing.
+> Actually, I have to admit that I copied something from <SwitchHosts!>, because it is a mature product and perfect. and, the AwesomeHosts is my first project using Golang, I will improve and perfect it for learning and growing.
 
 ## Todo List
 * add/edit/delete host `ok`
