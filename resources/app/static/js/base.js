@@ -39,7 +39,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 inputHost: '',
             },
             hostGroups: [],
-            
+
             system: system,
             ipPrepareList: [],
             createNewGroupDialog: false,
@@ -63,7 +63,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             // handleSizeChange: function (size) {
             //     this.pagesize = size;
             // },
-            handleCurrentChange: function(currentPage){
+            handleCurrentChange: function (currentPage) {
                 this.page.currentPage = currentPage;
             },
             querySearch(queryString, show) {
@@ -103,6 +103,15 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             },
             addGroup: function () {
                 this.loadingGroup.addGroupLoading = true;
+                this.newGroupForm.data.name = this.newGroupForm.data.name.trim();
+                if (this.newGroupForm.data.name === '') {
+                    this.$message({
+                        message: `Group name cannot be empty`,
+                        type: 'error'
+                    });
+                    this.loadingGroup.addGroupLoading = false;
+                    return;
+                }
                 server.sendMessage("addGroup", this.newGroupForm.data, (message) => {
                     let groupName = this.newGroupForm.data.name;
                     if (message.code === 1) {
@@ -117,12 +126,8 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             type: 'success'
                         });
                     } else {
-                        let msg = 'An error occured while your operating';
-                        if (message.code == -1) {
-                            msg = 'Group already exists'
-                        }
                         this.$message({
-                            message: msg,
+                            message: message.message,
                             type: 'error'
                         });
                     }
@@ -162,23 +167,24 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         }
                     } else {
                         this.$message({
-                            message: 'An error occured while your operating',
+                            message: message.message,
                             type: 'error'
                         });
                     }
                 });
 
             },
-            openChangeGroupDialog: function(name) {
+            openChangeGroupDialog: function (name) {
                 this.changeGroupDialog = true;
                 this.changeGroupForm.data.name = this.system.currentGroupName
             },
             //change property of group
-            changeGroup: function() {
+            changeGroup: function () {
                 let oldName = this.system.currentGroupName;
                 let newName = this.changeGroupForm.data.name;
                 if (oldName === newName) {
-                    return ;
+                    this.changeGroupDialog = false;
+                    return;
                 }
                 this.loadingGroup.changeGroupLoading = true;
                 server.sendMessage("changeGroup", {oldName: oldName, newName: newName}, (message) => {
@@ -197,14 +203,14 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         });
                     } else {
                         this.$message({
-                            message: 'Group already exists',
+                            message: message.message,
                             type: 'error'
                         });
                     }
                     this.loadingGroup.changeGroupLoading = false;
                 })
             },
-            deleteGroup: function() {
+            deleteGroup: function () {
                 this.$confirm('Would you wanna delete this group? This operation will not be restored.', 'Delete Group', {
                     confirmButtonText: 'Yes',
                     cancelButtonText: 'No',
@@ -231,8 +237,8 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 if (this.system.currentGroupName === this.system.defaultSystemHostsName) {
                     return;
                 }
-                let ip = this.addHostForm.inputIp;
-                let domain = this.addHostForm.inputDomain;
+                let ip = this.addHostForm.inputIp.trim();
+                let domain = this.addHostForm.inputDomain.trim();
                 if (ip === '' || domain === '') {
                     this.$message({
                         message: "IP or Domain was empty.",
@@ -244,6 +250,13 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 let groupName = this.system.currentGroupName;
                 this.loadingGroup.addHostLoading = true;
                 server.sendMessage("addHost", {groupName: groupName, ip: ip, domain: domain}, (message) => {
+                    if (message.code !== 1) {
+                        this.$message({
+                            message: message.message,
+                            type: "error"
+                        });
+                        return;
+                    }
                     this.system.currentHosts.push({
                         ip: ip,
                         domain: domain,
@@ -271,14 +284,14 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     }, 500);
                 }).catch(results => {
                     this.$message({
-                        message: 'An error occured while your operating',
+                        message: 'An error occurred while your operating',
                         type: 'error'
                     });
                     console.log(results)
                 });
             },
             //fix rows index with page
-            fixIndexOffset: function(index) {
+            fixIndexOffset: function (index) {
                 return (this.page.currentPage - 1) * this.page.pageSize + index
             },
             //change property of host by row
@@ -298,18 +311,18 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     (message) => {
                         if (message.code !== 1) {
                             this.$message({
-                                message: 'An error occured while updating host',
+                                message: message.message,
                                 type: 'error'
                             });
                         }
                     });
             },
             //delete host by row
-            deleteHost: function(index) {
+            deleteHost: function (index) {
                 index = this.fixIndexOffset(index);
                 let groupName = this.system.currentGroupName;
                 if (groupName === this.system.defaultSystemHostsName) {
-                    return ;
+                    return;
                 }
                 server.sendMessage("deleteHost", {groupName: groupName, index: index}, (message) => {
                     if (message.code === 1) {
@@ -395,7 +408,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         } else {
                             this.$message({
                                 type: 'error',
-                                message: 'An error occured while your operating'
+                                message: message.message
                             });
                         }
                     });

@@ -196,10 +196,7 @@ func (m *Manager) explainHostsLine(line string) (Host, bool) {
 	if !enabled {
 		hostSplit[0] = strings.TrimSpace(strings.TrimLeft(hostSplit[0], "#"))
 	}
-	IPv4Pattern := `((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)`
-	IPv6Pattern := `(([\da-fA-F]{1,4}):){8}`
-	//if not ip, continue
-	if !regexp.MustCompile(IPv4Pattern).MatchString(hostSplit[0]) && !regexp.MustCompile(IPv6Pattern).MatchString(hostSplit[0]) {
+	if m.CheckIP(hostSplit[0]) != nil {
 		return Host{}, false
 	}
 	return Host{
@@ -568,4 +565,30 @@ func (m *Manager) DeleteHost(groupName string, index int) {
 	}
 	group.Hosts = append(group.Hosts[:index], group.Hosts[index+1:]...)
 	m.Config.LastUpdatedTimestamp = GetNowTimestamp()
+}
+
+func (m *Manager) CheckIP(ip string) error {
+	IPv4Pattern := `((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)`
+	IPv6Pattern := `([a-f0-9]{1,4}(:[a-f0-9]{1,4}){7}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){0,7}::[a-f0-9]{0,4}(:[a-f0-9]{1,4}){0,7})`
+	if !regexp.MustCompile(IPv4Pattern).MatchString(ip) && !regexp.MustCompile(IPv6Pattern).MatchString(ip) && ip != "::1" {
+		return fmt.Errorf("IP [%s] is illegal. ", ip)
+	}
+	return nil
+}
+
+func (m *Manager) CheckDomain(domain string) error {
+	pattern := `^[^\.]([A-Za-z])([A-Za-z\.\-\_0-9]+)[^.]$`
+	if !regexp.MustCompile(pattern).MatchString(domain) {
+		return fmt.Errorf("Domain [%s] is illegal. ", domain)
+	}
+	return nil
+
+}
+
+func (m *Manager) CheckGroupName(name string) error {
+	pattern := `[\\\\/:*?\"<>|]`
+	if regexp.MustCompile(pattern).MatchString(name) {
+		return fmt.Errorf("Group name [%s] is illegal. ", name)
+	}
+	return nil
 }
