@@ -299,6 +299,9 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         case 'needPassword':
                             this.needPassword(message.payload);
                             break;
+                        case 'updateSystemHosts':
+                            this.system.systemHosts = message.payload;
+                            break;
                     }
                 });
             })

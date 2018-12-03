@@ -7,7 +7,7 @@ A simple GUI for hosts manage, written in Go with the astilectron, and Vue, Elem
 * edit host `working`
 * delete host `pendding`
 * enable/disable group `ok`
-* add group `pendding`
+* add group `ok`
 * edit group name `pendding`
 * sync unix/window hosts `working`
 * clear DNS cache `pendding`

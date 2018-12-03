@@ -45,6 +45,7 @@ type GroupConfig struct {
 
 type Config struct {
 	Groups               []GroupConfig
+	InstalledTimestamp   int64
 	LastUpdatedTimestamp int64 //last timestamp of hosts data was updated
 	LastSyncTimestamp    int64 //last timestamp of refresh hosts data to system hosts
 }
@@ -73,14 +74,12 @@ func New(hostsDir string) *Manager {
 }
 
 func (m *Manager) Init() *Manager {
-	//fourth, every x ms sync system hosts
+	//third, sync your changed with an interval
 	defer m.syncStart()
-	//third, init host groups
+	//second, init host groups
 	defer m.initGroups()
-	//second, init or load config into m.Config
+	//first, init or load config into m.Config
 	defer m.loadConfig()
-	//first, backup system hosts as a new group
-	defer m.initSystemHosts()
 	exists, err := PathExists(m.hostsDir)
 	if err != nil {
 		log.Fatal(err)
@@ -98,20 +97,17 @@ func (m *Manager) Init() *Manager {
 	return m
 }
 
-func (m *Manager) initSystemHosts() {
-	file, _ := os.Open(GetHostsFile())
-	defer file.Close()
+func (m *Manager) backupSystemHosts() {
+	file, err := os.Open(GetHostsFile())
+	if err != nil {
+		panic(err)
+	}
 	hosts := m.GetHosts(file)
 	m.SystemHosts = hosts
-	exists, err := PathExists(m.GetGroupFilePath(m.DefaultGroupName))
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(0)
+	if err := m.WriteHosts(m.GetGroupFilePath(m.DefaultGroupName), m.SystemHosts); err != nil {
+		panic(err)
 	}
-	if exists {
-		return
-	}
-	m.WriteHosts(m.GetGroupFilePath(m.DefaultGroupName), m.SystemHosts)
+	_ = file.Close()
 }
 
 func (m *Manager) GetGroupFilePath(groupName string) string {
@@ -136,9 +132,19 @@ func (m *Manager) loadConfig() {
 			Groups:               []GroupConfig{{Name: m.DefaultGroupName, Enabled: true, LastUpdatedTimestamp: 0, CreatedTimestamp: GetNowTimestamp()}},
 			LastUpdatedTimestamp: 0,
 			LastSyncTimestamp:    0,
+			InstalledTimestamp:   0,
 		}
+	}
+	if m.Config.InstalledTimestamp <= 0 {
+		//update install timestamp
+		m.Config.InstalledTimestamp = GetNowTimestamp()
+		//first install, backup your system hosts
+		m.backupSystemHosts()
+		//and save the config
 		m.persistConfig()
 	}
+	//create index for group config
+	m.initGroupConfigIndex()
 }
 
 func (m *Manager) loadConfigFromFile() {
@@ -238,46 +244,28 @@ func (m *Manager) initGroupConfigIndex() {
 	}
 }
 
+func DeleteGroup(groupName string) {
+
+}
+
 func (m *Manager) GetGroups() []Group {
 	var groups []Group
-	m.initGroupConfigIndex()
-	files, _ := ioutil.ReadDir(m.hostsDir)
-	timestamp := GetNowTimestamp()
-	for _, f := range files {
-		groupInfo := strings.Split(f.Name(), ".")
-		if groupInfo[len(groupInfo)-1] != "host" {
+	for _, item := range m.Config.Groups {
+		groupFileName := m.GetGroupFilePath(item.Name)
+		file, err := os.OpenFile(groupFileName, os.O_RDONLY|os.O_CREATE, 0666)
+		if err != nil {
 			continue
 		}
-		groupName := groupInfo[0]
-		if len(groupInfo) >= 3 {
-			groupName = strings.Join(groupInfo[0:], ".")
-		}
-		var enabled bool
-		var createdTimestamp int64
-		gc := m.FindGroupConfig(groupName)
-		if gc == nil {
-			enabled = false
-			createdTimestamp = timestamp
-			//if group doesn't exists in config file, then add it.
-			m.addGroupToConfig(groupName, enabled, 0, createdTimestamp)
-		} else {
-			enabled = gc.Enabled
-			createdTimestamp = gc.CreatedTimestamp
-		}
-		//read host file
-		file, err := os.Open(m.hostsDir + "/" + f.Name())
 		hosts := m.GetHosts(file)
-		ErrorAndExitWithLog(file.Close())
-		ErrorAndExitWithLog(err)
-		//append to groups
-		groups = append(groups, Group{Name: groupName, Enabled: enabled, Active: false, Hosts: hosts, CreatedAt: createdTimestamp})
+		groups = append(groups, Group{Name: item.Name, Enabled: item.Enabled, CreatedAt: item.CreatedTimestamp, Hosts: hosts})
+		if err := file.Close(); err != nil {
+			panic(err)
+		}
 	}
-	fmt.Println("Before sort", groups)
+	//sort by createdTimestamp
 	sort.SliceStable(groups, func(i, j int) bool {
 		return groups[i].CreatedAt < groups[j].CreatedAt
 	})
-	fmt.Println("After sort", groups)
-
 	return groups
 }
 
@@ -343,13 +331,14 @@ func (m *Manager) syncStart() {
 	ticker := time.NewTicker(time.Second)
 	go func() {
 		for _ = range ticker.C {
+			//nothing changed if updated time less then sync time
 			if m.Config.LastUpdatedTimestamp-m.Config.LastSyncTimestamp <= 0 {
-				//fmt.Println("continue")
 				continue
 			}
 			m.Config.LastSyncTimestamp = GetNowTimestamp()
 			m.persistConfig()
 			tmpHosts := ""
+			//build hosts
 			for _, config := range m.Config.Groups {
 				group := m.FindGroup(config.Name)
 				if group == nil {
@@ -366,9 +355,14 @@ func (m *Manager) syncStart() {
 			if !m.needSync(tmpHosts) {
 				continue
 			}
-			err := m.WriteContent(m.GetHostDir()+"/"+m.TempFileName, tmpHosts);
+			err := m.WriteContent(m.GetHostDir()+"/"+m.TempFileName, tmpHosts)
 			ErrorAndExitWithLog(err)
+			//sync hosts to host file
 			m.SyncSystemHosts()
+			//latest hosts list
+			m.SystemHosts = m.explainHostsString(tmpHosts)
+			//refresh client system hosts list
+			m.SendMessage("updateSystemHosts", m.SystemHosts)
 			fmt.Println("sync hosts")
 		}
 	}()
@@ -405,12 +399,6 @@ func (m *Manager) refreshGroupsConfig(groupName string) {
 
 //find host group data
 func (m *Manager) FindGroupConfig(groupName string) *GroupConfig {
-	//for i, _ := range m.Config.Groups {
-	//	config := &m.Config.Groups[i]
-	//	if config.Name == groupName {
-	//		return config
-	//	}
-	//}
 	v, ok := m.GroupConfigIndex[groupName]
 	if !ok {
 		return nil
@@ -504,8 +492,15 @@ func (m *Manager) SyncSystemHostsUnix() bool {
 			}
 		}
 		if isNeedPass {
-			bootstrap.SendMessage(m.Window, "needPassword", "syncSystemHostsUnix")
+			m.SendMessage("needPassword", "syncSystemHostsUnix")
 		}
+		return false
+	}
+	return true
+}
+
+func (m *Manager) SendMessage(name string, payload interface{}) bool {
+	if err := bootstrap.SendMessage(m.Window, name, payload); err != nil {
 		return false
 	}
 	return true
