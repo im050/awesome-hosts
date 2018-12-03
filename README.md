@@ -1,3 +1,5 @@
+[简体中文](https://github.com/im050/awesome-hosts/blob/master/README_ZH.md)
+
 # Awesome Hosts
 
 A simple GUI for manage hosts, written in Go with the [astilectron](https://github.com/asticode/go-astilectron), and [Vue](https://github.com/vuejs/vue), [ElementUI](http://element-cn.eleme.io), etc.
@@ -51,6 +53,7 @@ To bundle the app for more environments, add an `environments` key to the bundle
 * [SwitchHosts!](https://github.com/oldj/SwitchHosts) an App for managing hosts file  
 
 > Actually, I have to admit that I copied something from <SwitchHosts!>, because it is a mature product and perfect. and, the AwesomeHosts is my first project using Golang, I will improve and perfect it for learning and growing.
+
 
 ## Todo List
 * add/edit/delete host `ok`

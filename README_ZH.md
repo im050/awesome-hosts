@@ -1,3 +1,5 @@
+[English](https://github.com/im050/awesome-hosts/blob/master/README_ZH.md)
+
 # Awesome Hosts
 
 一个简单的host管理工具, 采用Go语言编写，并且使用了 [astilectron](https://github.com/asticode/go-astilectron) 和 [Vue](https://github.com/vuejs/vue)，[ElementUI](http://element-cn.eleme.io)，等等
