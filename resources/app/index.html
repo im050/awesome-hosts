@@ -96,7 +96,7 @@
                                     placement="top"
                                     width="200"
                                     trigger="click">
-                                <el-input :disabled="system.isSystemHosts" v-model="scope.row.domain"
+                                <el-input :disabled="system.isSystemHosts" @blur="changeHost($event, scope.$index)" v-model="scope.row.domain"
                                           placeholder="domain"></el-input>
                                 <span class="edit-column" slot="reference">{{ scope.row.domain }}</span>
                             </el-popover>
