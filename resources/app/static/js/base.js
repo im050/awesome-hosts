@@ -261,11 +261,11 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 }
                 server.sendMessage(
                     "updateHost",
-                    {groupName: groupName, ip: host.ip, domain: host.domain, enabled: value, index: index},
+                    {groupName: groupName, ip: host.ip, domain: host.domain, enabled: host.enabled, index: index},
                     (message) => {
                         if (message.code !== 1) {
                             //it turns switch button to old status
-                            this.system.currentHosts[index].enabled = !value;
+                            //this.system.currentHosts[index].enabled = !host.enabled;
                             this.$message({
                                 message: 'An error occured while updating host',
                                 type: 'error'

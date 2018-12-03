@@ -39,9 +39,9 @@
             </ul>
         </el-aside>
         <el-container>
-            <el-header>
-                <h4>{{ system.currentGroupName }}</h4>
-                <div class="group-controller">
+            <el-header class="unselectable">
+                <h4>{{ system.currentGroupName }}</h4><i class=" el-icon-fa-lock" v-if="system.currentGroupName == 'System Hosts'"></i>
+                <div class="group-controller" v-if="system.currentGroupName != 'System Hosts'">
                     <el-button-group>
                         <el-button type="gray" icon="el-icon-edit" @click="openChangeGroupDialog"></el-button>
                         <el-button type="gray" icon="el-icon-delete" @click="deleteGroup"></el-button>
@@ -81,7 +81,7 @@
                                     placement="top"
                                     width="200"
                                     trigger="click">
-                                <el-input :disabled="system.isSystemHosts" v-model="scope.row.ip"
+                                <el-input :disabled="system.isSystemHosts" @blur="changeHost($event, scope.$index)" v-model="scope.row.ip"
                                           placeholder="ip"></el-input>
                                 <span class="edit-column" slot="reference">{{ scope.row.ip }}</span>
                             </el-popover>
@@ -115,7 +115,7 @@
                 </el-table>
 
             </el-main>
-            <el-footer>
+            <el-footer class="unselectable">
                 <div class="add-panel">
                     <el-autocomplete
                             ref="ipInput"

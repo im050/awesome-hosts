@@ -39,6 +39,12 @@ html, body, .framework, .framework>.row {
     display: inline-block;
 }
 
+.el-header h4 + i {
+    margin: 24px 0 24px 10px;
+    display: inline-block;
+    color: #ccc;
+}
+
 .el-header .group-controller {
     margin-top: 10px;
     float: right;
@@ -226,6 +232,7 @@ td.el-table_1_column_4 i {
     */
     -ms-user-select: none;
     user-select: none;
+    cursor: default;
 }
 
 .el-footer .el-button+.el-button {
