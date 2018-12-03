@@ -8,7 +8,7 @@
     <link href="static/css/app.css" rel="stylesheet">
 </head>
 <body>
-<div id="app" v-loading.fullscreen.lock="fullscreenLoading" v-cloak>
+<div id="app" v-loading.fullscreen.lock="loadingGroup.fullscreenLoading" v-cloak>
     <el-container>
         <el-aside width="200px" class="unselectable">
             <div class="aside-controller">
@@ -27,10 +27,10 @@
             <ul class="list">
                 <li :class="item.active ? 'current' : '' " v-for="item in hostGroups" @click="selectGroup(item.name)">
                     <i class="fa fa-lg"
-                       :class="item.name != 'System Hosts' ? 'el-icon-fa-list-ul' : 'el-icon-fa-desktop'"></i>
+                       :class="item.name != system.defaultSystemHostsName ? 'el-icon-fa-list-ul' : 'el-icon-fa-desktop'"></i>
                     {{ item.name }}
-                    <span class="checkbox" v-if="item.name != 'System Hosts'">
-                        <el-checkbox v-model="item.enabled" @change="groupSwitch"></el-checkbox>
+                    <span class="checkbox" v-if="item.name != system.defaultSystemHostsName">
+                        <el-checkbox v-model="item.enabled" @change="enableGroup"></el-checkbox>
                     </span>
                     <span class="checkbox" v-else>
                         <el-checkbox checked disabled></el-checkbox>
@@ -40,8 +40,8 @@
         </el-aside>
         <el-container>
             <el-header class="unselectable">
-                <h4>{{ system.currentGroupName }}</h4><i class=" el-icon-fa-lock" v-if="system.currentGroupName == 'System Hosts'"></i>
-                <div class="group-controller" v-if="system.currentGroupName != 'System Hosts'">
+                <h4>{{ system.currentGroupName }}</h4><i class=" el-icon-fa-lock" v-if="system.currentGroupName == system.defaultSystemHostsName"></i>
+                <div class="group-controller" v-if="system.currentGroupName != system.defaultSystemHostsName">
                     <el-button-group>
                         <el-button type="gray" icon="el-icon-edit" @click="openChangeGroupDialog"></el-button>
                         <el-button type="gray" icon="el-icon-delete" @click="deleteGroup"></el-button>
@@ -51,7 +51,7 @@
             <el-main>
                 <el-table
                         :data="system.currentHosts.slice((page.currentPage - 1) * page.pageSize, page.currentPage * page.pageSize)"
-                        v-loading="hostsLoading"
+                        v-loading="loadingGroup.hostsLoading"
                         stripe
                         border
                         empty-text="No results"
@@ -121,7 +121,7 @@
                         layout="slot, prev, pager, next"
                         @current-change="handleCurrentChange"
                         :total="this.system.currentHosts.length">
-                        <span  class="el-pagination__total">Total {{ system.currentHosts.length }} items</span>
+                        <span  class="el-pagination__total">Total {{ system.currentHosts.length }} items </span>
 
                 </el-pagination>
                 <!-- pagination end -->
@@ -131,7 +131,7 @@
                     <el-autocomplete
                             ref="ipInput"
                             class="inline-input"
-                            v-model="inputIp"
+                            v-model="addHostForm.inputIp"
                             :fetch-suggestions="querySearch"
                             prefix-icon="el-icon-location-outline"
                             @select="handleSelect"
@@ -140,13 +140,13 @@
                     ></el-autocomplete>
                     <el-input
                             placeholder="Domain"
-                            v-model="inputHost"
+                            v-model="addHostForm.inputDomain"
                             prefix-icon="el-icon-fa-desktop"
                             @keyup.enter.native="addHost"
                             clearable>
                     </el-input>
                     <el-button icon="el-icon-plus" @click="addHost" :disabled="system.isSystemHosts"
-                               :loading="addHostLoading">Add
+                               :loading="loadingGroup.addHostLoading">Add
                     </el-button>
                     <el-button icon="el-icon-search">Search</el-button>
                 </div>
@@ -186,7 +186,7 @@
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="createNewGroupDialog = false">Cancel</el-button>
-            <el-button type="primary" :loading="addGroupLoading" @click="addGroup">Add</el-button>
+            <el-button type="primary" :loading="loadingGroup.addGroupLoading" @click="addGroup">Add</el-button>
         </div>
     </el-dialog>
     <el-dialog title="Change Group" :visible.sync="changeGroupDialog">
@@ -197,7 +197,7 @@
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="changeGroupDialog = false">Cancel</el-button>
-            <el-button type="primary" :loading="changeGroupLoading" @click="changeGroup">Save</el-button>
+            <el-button type="primary" :loading="loadingGroup.changeGroupLoading" @click="changeGroup">Save</el-button>
         </div>
     </el-dialog>
 </div>

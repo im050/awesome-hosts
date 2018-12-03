@@ -2,7 +2,7 @@ let Server = function () {
 };
 
 Server.prototype.sendMessage = function (name, payload, callback) {
-    // This will send a message to Go
+    // send a message to Go
     astilectron.sendMessage({name: name, payload: payload}, function (message) {
         console.log(message);
         callback(message.payload)
@@ -11,12 +11,14 @@ Server.prototype.sendMessage = function (name, payload, callback) {
 
 (function () {
     let system = {
-        isSystemHosts: true,
+        defaultSystemHostsName: "System Hosts",
+        // current group name
         currentGroupName: '',
+        // table rows depended on this variable
         currentHosts: [],
+        // put system hosts at here
         systemHosts: []
     };
-    const SYSTEM_HOSTS_NAME = "System Hosts";
     let server = new Server();
     let app = new Vue({
         el: '#app',
@@ -25,14 +27,19 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 pageSize: 100,
                 currentPage: 1
             },
-            hostsLoading: false,
-            fullscreenLoading: false,
-            addHostLoading: false,
-            addGroupLoading: false,
-            changeGroupLoading: false,
+            loadingGroup: {
+                hostsLoading: false,
+                fullscreenLoading: true,
+                addHostLoading: false,
+                addGroupLoading: false,
+                changeGroupLoading: false,
+            },
+            addHostForm: {
+                inputIp: '',
+                inputHost: '',
+            },
             hostGroups: [],
-            inputIp: '',
-            inputHost: '',
+            
             system: system,
             ipPrepareList: [],
             createNewGroupDialog: false,
@@ -95,13 +102,14 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 this.createNewGroupDialog = false;
             },
             addGroup: function () {
+                this.loadingGroup.addGroupLoading = true;
                 server.sendMessage("addGroup", this.newGroupForm.data, (message) => {
                     let groupName = this.newGroupForm.data.name;
                     if (message.code === 1) {
                         this.clearNewGroupForm().closeNewGroupDialog();
                         this.hostGroups = message.payload;
                         this.hostGroups.unshift({
-                            name: SYSTEM_HOSTS_NAME,
+                            name: this.system.defaultSystemHostsName,
                             active: false,
                         });
                         this.$message({
@@ -118,6 +126,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             type: 'error'
                         });
                     }
+                    this.loadingGroup.addGroupLoading = false;
                 });
             },
             importHosts: function (event) {
@@ -134,7 +143,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 };
                 reader.readAsText(event.file);
             },
-            groupSwitch: function (value) {
+            enableGroup: function (value) {
                 server.sendMessage("enableGroup", {
                     groupName: this.system.currentGroupName,
                     enabled: value
@@ -164,12 +173,14 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 this.changeGroupDialog = true;
                 this.changeGroupForm.data.name = this.system.currentGroupName
             },
+            //change property of group
             changeGroup: function() {
                 let oldName = this.system.currentGroupName;
                 let newName = this.changeGroupForm.data.name;
                 if (oldName === newName) {
                     return ;
                 }
+                this.loadingGroup.changeGroupLoading = true;
                 server.sendMessage("changeGroup", {oldName: oldName, newName: newName}, (message) => {
                     if (message.code === 1) {
                         this.system.currentGroupName = newName;
@@ -190,6 +201,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             type: 'error'
                         });
                     }
+                    this.loadingGroup.changeGroupLoading = false;
                 })
             },
             deleteGroup: function() {
@@ -201,7 +213,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     server.sendMessage("deleteGroup", {groupName: this.system.currentGroupName}, (message) => {
                         this.hostGroups = message.payload;
                         this.hostGroups.unshift({
-                            name: SYSTEM_HOSTS_NAME,
+                            name: this.system.defaultSystemHostsName,
                             active: false,
                         });
                         this.selectGroup(this.hostGroups[this.hostGroups.length - 1].name)
@@ -214,12 +226,13 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     //nothing to do
                 });
             },
+            //add host by row
             addHost: function () {
-                if (this.system.currentGroupName === SYSTEM_HOSTS_NAME) {
+                if (this.system.currentGroupName === this.system.defaultSystemHostsName) {
                     return;
                 }
-                let ip = this.inputIp;
-                let domain = this.inputHost;
+                let ip = this.addHostForm.inputIp;
+                let domain = this.addHostForm.inputDomain;
                 if (ip === '' || domain === '') {
                     this.$message({
                         message: "IP or Domain was empty.",
@@ -229,7 +242,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 }
 
                 let groupName = this.system.currentGroupName;
-                this.addHostLoading = true;
+                this.loadingGroup.addHostLoading = true;
                 server.sendMessage("addHost", {groupName: groupName, ip: ip, domain: domain}, (message) => {
                     this.system.currentHosts.push({
                         ip: ip,
@@ -238,34 +251,37 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     });
                     //focus on ip input
                     this.$refs.ipInput.focus();
-                    this.inputIp = '';
-                    this.inputHost = '';
-                    this.addHostLoading = false;
+                    this.addHostForm.inputIp = '';
+                    this.addHostForm.inputDomain = '';
+                    this.loadingGroup.addHostLoading = false;
                     this.$message({
                         message: 'Added successfully',
                         type: 'success'
                     });
                 });
             },
+            //init, load System hosts and Groups
             init: function () {
                 let _this = this;
-                //
-                // for (let i= 0; i<500; i++) {
-                //     this.system.currentHosts.push({ip:"127.0.0.1"+i, domain:"hello", enabled: true})
-                // }
-                Promise.all([this.getList(SYSTEM_HOSTS_NAME), this.getHostGroups()]).then((results) => {
+                Promise.all([this.getList(this.system.defaultSystemHostsName), this.getHostGroups()]).then((results) => {
                     _this.hostGroups[0].active = true;
                     _this.system.currentGroupName = _this.hostGroups[0].name;
                     setTimeout(() => {
-                        _this.fullscreenLoading = false;
-                        _this.hostsLoading = false;
-                    }, 1000);
-                    console.log(results);
+                        _this.loadingGroup.fullscreenLoading = false;
+                    }, 500);
+                }).catch(results => {
+                    this.$message({
+                        message: 'An error occured while your operating',
+                        type: 'error'
+                    });
+                    console.log(results)
                 });
             },
+            //fix rows index with page
             fixIndexOffset: function(index) {
                 return (this.page.currentPage - 1) * this.page.pageSize + index
             },
+            //change property of host by row
             changeHost: function (value, index) {
                 let groupName = this.system.currentGroupName;
                 index = this.fixIndexOffset(index);
@@ -281,8 +297,6 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     {groupName: groupName, ip: host.ip, domain: host.domain, enabled: host.enabled, index: index},
                     (message) => {
                         if (message.code !== 1) {
-                            //it turns switch button to old status
-                            //this.system.currentHosts[index].enabled = !host.enabled;
                             this.$message({
                                 message: 'An error occured while updating host',
                                 type: 'error'
@@ -290,10 +304,11 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         }
                     });
             },
+            //delete host by row
             deleteHost: function(index) {
                 index = this.fixIndexOffset(index);
                 let groupName = this.system.currentGroupName;
-                if (groupName === SYSTEM_HOSTS_NAME) {
+                if (groupName === this.system.defaultSystemHostsName) {
                     return ;
                 }
                 server.sendMessage("deleteHost", {groupName: groupName, index: index}, (message) => {
@@ -307,14 +322,16 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     }
                 });
             },
+            //change group panel
             selectGroup: function (groupName) {
-                this.system.isSystemHosts = (groupName === SYSTEM_HOSTS_NAME);
+                this.system.isSystemHosts = (groupName === this.system.defaultSystemHostsName);
                 this.page.currentPage = 1;
+                this.loadingGroup.hostsLoading = true;
                 for (let i in this.hostGroups) {
                     let item = this.hostGroups[i];
                     if (groupName === item.name) {
                         item.active = true;
-                        if (groupName === SYSTEM_HOSTS_NAME) {
+                        if (groupName === this.system.defaultSystemHostsName) {
                             this.system.currentHosts = this.system.systemHosts;
                         } else {
                             if (item.hosts === null) {
@@ -327,39 +344,42 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         item.active = false;
                     }
                 }
+                this.loadingGroup.hostsLoading = false;
             },
-            getList: function (type) {
+            //get list from backend
+            getList: function (groupName) {
                 let _this = this;
                 return new Promise((resolve) => {
-                    server.sendMessage("list", {type: type}, (message) => {
+                    server.sendMessage("list", {groupName: groupName}, (message) => {
                         if (message.payload === null) {
                             message.payload = [];
                         }
                         _this.system.currentHosts = message.payload;
-                        if (type === SYSTEM_HOSTS_NAME) {
+                        if (groupName === this.system.defaultSystemHostsName) {
                             _this.system.systemHosts = message.payload;
                         }
-                        _this.hostsLoading = false;
+                        _this.loadingGroup.hostsLoading = false;
                         resolve(true)
                     });
                 })
             },
+            //get groups with hosts from backend
             getHostGroups: function () {
-                let _this = this;
                 return new Promise((resolve) => {
                     server.sendMessage('groups', {}, (message) => {
                         if (message.payload === null) {
                             message.payload = []
                         }
-                        _this.hostGroups = message.payload;
-                        _this.hostGroups.unshift({
-                            name: SYSTEM_HOSTS_NAME,
+                        this.hostGroups = message.payload;
+                        this.hostGroups.unshift({
+                            name: this.system.defaultSystemHostsName,
                             active: false,
                         });
                         resolve(true);
                     })
                 })
             },
+            //pop a dialog ask for enter the master password
             needPassword: function (payload) {
                 this.$prompt('In order to sync hosts file you have to type in the administrator password.', 'Password', {
                     confirmButtonText: 'Confirm',
@@ -389,8 +409,11 @@ Server.prototype.sendMessage = function (name, payload, callback) {
         },
         mounted() {
             document.addEventListener('astilectron-ready', () => {
+                //init
                 this.init();
+                //some tips for ip input
                 this.loadIpPrepareList();
+                //listen the message from backend
                 astilectron.onMessage((message) => {
                     switch (message.name) {
                         case 'needPassword':
@@ -404,5 +427,4 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             })
         }
     });
-    app.init()
 })();
