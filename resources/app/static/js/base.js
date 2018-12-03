@@ -26,17 +26,25 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             fullscreenLoading: false,
             addHostLoading: false,
             addGroupLoading: false,
+            changeGroupLoading: false,
             hostGroups: [],
             inputIp: '',
             inputHost: '',
             system: system,
             ipPrepareList: [],
             createNewGroupDialog: false,
+            changeGroupDialog: false,
             newGroupForm: {
                 data: {
                     name: '',
                     hosts: '',
                     enabled: true,
+                },
+                width: '80px'
+            },
+            changeGroupForm: {
+                data: {
+                    name: ''
                 },
                 width: '80px'
             }
@@ -143,6 +151,28 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 });
 
             },
+            openChangeGroupDialog: function(name) {
+                this.changeGroupDialog = true;
+                this.changeGroupForm.data.name = this.system.currentGroupName
+            },
+            changeGroup: function() {
+                let oldName = this.currentGroupName;
+                let newName = this.changeGroupForm.data.name
+            },
+            deleteGroup: function() {
+                this.$confirm('Would you wanna delete this group? This operation will not be restored.', 'Delete Group', {
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    type: 'warning'
+                }).then(() => {
+                    this.$message({
+                        type: 'success',
+                        message: 'Successfully deleted'
+                    });
+                }).catch(() => {
+                    //nothing to do
+                });
+            },
             addHost: function () {
                 if (this.system.currentGroupName === SYSTEM_HOSTS_NAME) {
                     return;
@@ -211,7 +241,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         }
                     });
             },
-            changeGroup: function (groupName) {
+            selectGroup: function (groupName) {
                 this.system.isSystemHosts = (groupName === SYSTEM_HOSTS_NAME);
                 for (let i in this.hostGroups) {
                     let item = this.hostGroups[i];

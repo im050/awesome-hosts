@@ -35,6 +35,17 @@ html, body, .framework, .framework>.row {
     line-height: 60px;
     font-weight: 200;
     margin: 0;
+    float: left;
+    display: inline-block;
+}
+
+.el-header .group-controller {
+    margin-top: 10px;
+    float: right;
+}
+
+.el-button--gray {
+    background: rgb(243, 243, 243);
 }
 
 .el-footer {

@@ -25,7 +25,7 @@
                 </el-button-group>
             </div>
             <ul class="list">
-                <li :class="item.active ? 'current' : '' " v-for="item in hostGroups" @click="changeGroup(item.name)">
+                <li :class="item.active ? 'current' : '' " v-for="item in hostGroups" @click="selectGroup(item.name)">
                     <i class="fa fa-lg"
                        :class="item.name != 'System Hosts' ? 'el-icon-fa-list-ul' : 'el-icon-fa-desktop'"></i>
                     {{ item.name }}
@@ -41,6 +41,12 @@
         <el-container>
             <el-header>
                 <h4>{{ system.currentGroupName }}</h4>
+                <div class="group-controller">
+                    <el-button-group>
+                        <el-button type="gray" icon="el-icon-edit" @click="openChangeGroupDialog"></el-button>
+                        <el-button type="gray" icon="el-icon-delete" @click="deleteGroup"></el-button>
+                    </el-button-group>
+                </div>
             </el-header>
             <el-main>
                 <el-table
@@ -170,6 +176,17 @@
         <div slot="footer" class="dialog-footer">
             <el-button @click="createNewGroupDialog = false">Cancel</el-button>
             <el-button type="primary" :loading="addGroupLoading" @click="addGroup">Add</el-button>
+        </div>
+    </el-dialog>
+    <el-dialog title="Change Group" :visible.sync="changeGroupDialog">
+        <el-form :model="changeGroupForm.data">
+            <el-form-item label="Name" :label-width="changeGroupForm.width">
+                <el-input v-model="changeGroupForm.data.name" autocomplete="off"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="changeGroupDialog = false">Cancel</el-button>
+            <el-button type="primary" :loading="changeGroupLoading" @click="changeGroup">Save</el-button>
         </div>
     </el-dialog>
 </div>
