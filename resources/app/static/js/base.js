@@ -156,8 +156,32 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 this.changeGroupForm.data.name = this.system.currentGroupName
             },
             changeGroup: function() {
-                let oldName = this.currentGroupName;
-                let newName = this.changeGroupForm.data.name
+                let oldName = this.system.currentGroupName;
+                let newName = this.changeGroupForm.data.name;
+                if (oldName === newName) {
+                    return ;
+                }
+                server.sendMessage("changeGroup", {oldName: oldName, newName: newName}, (message) => {
+                    if (message.code === 1) {
+                        this.system.currentGroupName = newName;
+                        this.changeGroupDialog = false;
+                        for (let i in this.hostGroups) {
+                            let item = this.hostGroups[i];
+                            if (item.name === oldName) {
+                                item.name = newName
+                            }
+                        }
+                        this.$message({
+                            message: 'The group has been enabled.',
+                            type: 'success'
+                        });
+                    } else {
+                        this.$message({
+                            message: 'Group already exists',
+                            type: 'error'
+                        });
+                    }
+                })
             },
             deleteGroup: function() {
                 this.$confirm('Would you wanna delete this group? This operation will not be restored.', 'Delete Group', {

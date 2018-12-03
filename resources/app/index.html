@@ -82,7 +82,7 @@
                                     width="200"
                                     trigger="click">
                                 <el-input :disabled="system.isSystemHosts" v-model="scope.row.ip"
-                                          placeholder="请输入内容"></el-input>
+                                          placeholder="ip"></el-input>
                                 <span class="edit-column" slot="reference">{{ scope.row.ip }}</span>
                             </el-popover>
                         </template>
@@ -97,7 +97,7 @@
                                     width="200"
                                     trigger="click">
                                 <el-input :disabled="system.isSystemHosts" v-model="scope.row.domain"
-                                          placeholder="请输入内容"></el-input>
+                                          placeholder="domain"></el-input>
                                 <span class="edit-column" slot="reference">{{ scope.row.domain }}</span>
                             </el-popover>
                         </template>
@@ -143,7 +143,7 @@
         </el-container>
     </el-container>
     <el-dialog title="New Group" :visible.sync="createNewGroupDialog">
-        <el-form :model="newGroupForm.data">
+        <el-form :model="newGroupForm.data" @submit.native.prevent>
             <el-form-item label="Name" :label-width="newGroupForm.width">
                 <el-input v-model="newGroupForm.data.name" autocomplete="off"></el-input>
             </el-form-item>
@@ -179,9 +179,9 @@
         </div>
     </el-dialog>
     <el-dialog title="Change Group" :visible.sync="changeGroupDialog">
-        <el-form :model="changeGroupForm.data">
+        <el-form :model="changeGroupForm.data" @submit.native.prevent>
             <el-form-item label="Name" :label-width="changeGroupForm.width">
-                <el-input v-model="changeGroupForm.data.name" autocomplete="off"></el-input>
+                <el-input v-model="changeGroupForm.data.name" @keyup.enter.native="changeGroup" autocomplete="off"></el-input>
             </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">

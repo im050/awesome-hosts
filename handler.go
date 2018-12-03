@@ -64,7 +64,17 @@ func handleMessages(w *astilectron.Window, mi bootstrap.MessageIn) (payload inte
 		} else {
 			payload = ElectronResponse(0, "success", nil)
 		}
+	case "changeGroup":
+		if m.FindGroupConfig(data["newName"].(string)) != nil {
+			payload = ElectronResponse(-1, "Group already exists", nil)
+			return
+		}
+		oldName := data["oldName"].(string)
+		newName := data["newName"].(string)
+		m.ChangeGroupName(oldName, newName)
+		payload = ElectronResponse(1, "success", m.Groups)
 	}
+
 	return
 }
 

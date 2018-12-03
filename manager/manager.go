@@ -505,3 +505,18 @@ func (m *Manager) SendMessage(name string, payload interface{}) bool {
 	}
 	return true
 }
+
+func (m *Manager) ChangeGroupName(oldName string, newName string) {
+	//update group config
+	groupConfig := m.FindGroupConfig(oldName)
+	groupConfig.Name = newName
+	//update group
+	group := m.FindGroup(oldName)
+	group.Name = newName
+	//update index
+	delete(m.GroupConfigIndex, oldName)
+	m.GroupConfigIndex[newName] = groupConfig
+	//update file name
+	ErrorAndExitWithLog(os.Rename(m.GetGroupFilePath(oldName), m.GetGroupFilePath(newName)))
+	m.persistConfig()
+}
