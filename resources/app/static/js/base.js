@@ -189,6 +189,14 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     cancelButtonText: 'No',
                     type: 'warning'
                 }).then(() => {
+                    server.sendMessage("deleteGroup", {groupName: this.system.currentGroupName}, (message) => {
+                        this.hostGroups = message.payload;
+                        this.hostGroups.unshift({
+                            name: SYSTEM_HOSTS_NAME,
+                            active: false,
+                        });
+                        this.selectGroup(this.hostGroups[this.hostGroups.length - 1].name)
+                    });
                     this.$message({
                         type: 'success',
                         message: 'Successfully deleted'

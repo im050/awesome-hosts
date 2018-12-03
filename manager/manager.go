@@ -80,6 +80,8 @@ func (m *Manager) Init() *Manager {
 	defer m.initGroups()
 	//first, init or load config into m.Config
 	defer m.loadConfig()
+	//init current system hosts
+	m.initSystemHosts()
 	exists, err := PathExists(m.hostsDir)
 	if err != nil {
 		log.Fatal(err)
@@ -97,17 +99,19 @@ func (m *Manager) Init() *Manager {
 	return m
 }
 
-func (m *Manager) backupSystemHosts() {
+func (m *Manager) initSystemHosts() {
 	file, err := os.Open(GetHostsFile())
+	m.SystemHosts = m.GetHosts(file)
+	defer file.Close()
 	if err != nil {
 		panic(err)
 	}
-	hosts := m.GetHosts(file)
-	m.SystemHosts = hosts
+}
+
+func (m *Manager) backupSystemHosts() {
 	if err := m.WriteHosts(m.GetGroupFilePath(m.DefaultGroupName), m.SystemHosts); err != nil {
 		panic(err)
 	}
-	_ = file.Close()
 }
 
 func (m *Manager) GetGroupFilePath(groupName string) string {
@@ -242,10 +246,6 @@ func (m *Manager) initGroupConfigIndex() {
 		c := &m.Config.Groups[i];
 		m.GroupConfigIndex[c.Name] = c
 	}
-}
-
-func DeleteGroup(groupName string) {
-
 }
 
 func (m *Manager) GetGroups() []Group {
@@ -519,4 +519,44 @@ func (m *Manager) ChangeGroupName(oldName string, newName string) {
 	//update file name
 	ErrorAndExitWithLog(os.Rename(m.GetGroupFilePath(oldName), m.GetGroupFilePath(newName)))
 	m.persistConfig()
+}
+
+func (m *Manager) DeleteGroup(groupName string) {
+	m.deleteGroupWithGroupName(groupName).deleteGroupConfigWithGroupName(groupName).initGroupConfigIndex()
+	if err := os.Remove(m.GetGroupFilePath(groupName)); err != nil {
+		panic(err)
+	}
+	m.Config.LastUpdatedTimestamp = GetNowTimestamp()
+}
+
+func (m *Manager) deleteGroupConfigWithGroupName(groupName string) *Manager {
+	index := -1
+	for i, _ := range m.Config.Groups {
+		group := m.Config.Groups[i]
+		if groupName == group.Name {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return m
+	}
+	m.Config.Groups = append(m.Config.Groups[:index], m.Config.Groups[index+1:]...)
+	return m
+}
+
+func (m *Manager) deleteGroupWithGroupName(groupName string) *Manager {
+	index := -1
+	for i, _ := range m.Groups {
+		group := m.Groups[i]
+		if groupName == group.Name {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return m
+	}
+	m.Groups = append(m.Groups[:index], m.Groups[index+1:]...)
+	return m
 }

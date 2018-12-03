@@ -73,6 +73,13 @@ func handleMessages(w *astilectron.Window, mi bootstrap.MessageIn) (payload inte
 		newName := data["newName"].(string)
 		m.ChangeGroupName(oldName, newName)
 		payload = ElectronResponse(1, "success", m.Groups)
+	case "deleteGroup":
+		if m.FindGroupConfig(data["groupName"].(string)) == nil {
+			payload = ElectronResponse(0, "Group not exists", nil)
+			return
+		}
+		m.DeleteGroup(data["groupName"].(string))
+		payload = ElectronResponse(1, "success", m.Groups)
 	}
 
 	return
