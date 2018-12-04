@@ -1,12 +1,13 @@
 package main
 
 import (
+	"awesome-hosts/parameters"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestParams(t *testing.T) {
-	p := NewParameters()
+	p := parameters.New()
 	data := map[string]interface{}{
 		"world": "world",
 		"bool" : true,
