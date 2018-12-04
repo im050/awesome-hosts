@@ -208,7 +208,7 @@ func (m *Manager) explainHostsLine(line string) (Host, bool) {
 
 func (m *Manager) explainHostsString(content string) Hosts {
 	var hosts []Host
-	lines := strings.Split(content, GetLineSeparator())
+	lines := strings.Split(content, "\n") //because of textarea, so the line separator is "\n"
 	for _, line := range lines {
 		host, ok := m.explainHostsLine(line)
 		if !ok {
