@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./manager"
+	"awesome-hosts/manager"
 	"flag"
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron-bootstrap"
