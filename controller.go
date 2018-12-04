@@ -134,7 +134,7 @@ func (handler *Handler) DeleteGroupHandler() Response {
 		return Response{Code: 0, Message: "Group already exists"}
 	}
 	m.DeleteGroup(groupName)
-	return Response{Code: 1, Message: "success"}
+	return Response{Code: 1, Message: "success", Payload: m.Groups}
 }
 
 func (handler *Handler) DeleteHostHandler() Response {
