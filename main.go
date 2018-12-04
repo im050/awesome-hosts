@@ -12,6 +12,8 @@ import (
 func main() {
 	//init manager instance
 	m = manager.New(manager.GetUserHome() + "/.awesohosts").Init()
+	handler := new(Handler)
+	handler.Parameters = new(Parameters)
 	// Init
 	flag.Parse()
 	astilog.FlagInit()
@@ -33,7 +35,7 @@ func main() {
 		},
 		Windows: []*bootstrap.Window{{
 			Homepage:       "index.html",
-			MessageHandler: handleMessages,
+			MessageHandler: handler.handleMessages,
 			Options: &astilectron.WindowOptions{
 				BackgroundColor: astilectron.PtrStr("#2d3e50"),
 				Center:          astilectron.PtrBool(true),

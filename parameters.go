@@ -13,47 +13,47 @@ func (p *Parameters) From(data map[string]interface{}) {
 	p.data = data
 }
 
-func (p *Parameters) GetString(name string, defaultValue string) string {
-	v := p.Get(name, defaultValue)
+func (p *Parameters) GetString(name string, args ...interface{}) (string, bool) {
+	v := p.Get(name, args)
 	if v == nil {
-		return ""
+		return "", false
 	}
-	return v.(string)
+	return v.(string), true
 }
 
-func (p *Parameters) GetInt(name string, defaultValue int) int {
-	v := p.Get(name, defaultValue)
+func (p *Parameters) GetInt(name string, args ...interface{}) (int, bool) {
+	v := p.Get(name, args)
 	if v == nil {
-		return 0
+		return 0, false
 	}
 	switch v.(type) {
 	case float64:
-		return int(v.(float64))
+		return int(v.(float64)), true
 	}
-	return v.(int)
+	return v.(int), true
 }
 
-func (p *Parameters) GetBool(name string, defaultValue bool) bool {
-	v := p.Get(name, defaultValue)
+func (p *Parameters) GetBool(name string, args ...interface{}) (bool, bool) {
+	v := p.Get(name, args)
 	if v == nil {
-		return false
+		return false, false
 	}
-	return v.(bool)
+	return v.(bool), true
 }
 
-func (p *Parameters) GetFloat(name string, defaultValue float64) float64 {
-	v := p.Get(name, defaultValue)
+func (p *Parameters) GetFloat(name string, args ...interface{}) (float64, bool) {
+	v := p.Get(name, args)
 	if v == nil {
-		return 0
+		return 0, false
 	}
-	return v.(float64)
+	return v.(float64), true
 }
 
-func (p *Parameters) Get(name string, defaultValue interface{}) interface{} {
+func (p *Parameters) Get(name string, args []interface{}) interface{} {
 	v, ok := p.data[name]
 	if !ok {
-		if defaultValue != nil {
-			v = defaultValue
+		if len(args) > 0 {
+			v = args[0]
 		} else {
 			return nil
 		}

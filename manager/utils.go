@@ -99,7 +99,6 @@ func GetNowTimestamp() int64 {
 	return time.Now().UnixNano() / 1e6
 }
 
-
 func ShellCommand(cmdStr string) (string, error) {
 	in := bytes.NewBuffer(nil)
 	cmd := exec.Command("sh")
