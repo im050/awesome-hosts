@@ -436,6 +436,9 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             break;
                         case 'updateSystemHosts':
                             this.system.systemHosts = message.payload;
+                            if (this.system.systemHosts === null) {
+                                this.system.systemHosts = []
+                            }
                             break;
                     }
                 });
