@@ -86,11 +86,11 @@ func (handler *Handler) SyncSystemHostsUnixHandler() Response {
 }
 
 func (handler *Handler) AddGroupHandler() Response {
-	groupName, _ := handler.Parameters.GetString("groupName", "")
+	groupName, _ := handler.Parameters.GetString("name", "")
 	enabled, _ := handler.Parameters.GetBool("enabled", false)
 	hosts, _ := handler.Parameters.GetString("hosts", "")
 	if groupName == "" {
-		return Response{Code: 1, Message: "Group name cannot be empty"}
+		return Response{Code: 0, Message: "Group name cannot be empty"}
 	}
 	if err := m.CheckGroupName(groupName); err != nil {
 		return Response{Code: 0, Message: err.Error()}
@@ -99,7 +99,7 @@ func (handler *Handler) AddGroupHandler() Response {
 		return Response{Code: 0, Message: "Group already exists"}
 	}
 	if m.AddGroup(groupName, enabled, hosts) {
-		return Response{Code: 1, Message: "success"}
+		return Response{Code: 1, Message: "success", Payload: m.Groups}
 	} else {
 		return Response{Code: 1, Message: "An error occurred while an operation"}
 	}
