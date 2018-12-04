@@ -337,7 +337,6 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             },
             //change group panel
             selectGroup: function (groupName) {
-                this.system.isSystemHosts = (groupName === this.system.defaultSystemHostsName);
                 this.page.currentPage = 1;
                 this.loadingGroup.hostsLoading = true;
                 for (let i in this.hostGroups) {

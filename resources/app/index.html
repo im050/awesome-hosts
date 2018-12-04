@@ -65,7 +65,7 @@
                         <template slot-scope="scope">
                             <el-switch
                                     v-model="scope.row.enabled"
-                                    :disabled="system.isSystemHosts"
+                                    :disabled="system.currentGroupName == system.defaultSystemHostsName"
                                     active-color="#13ce66"
                                     @change="changeHost($event, scope.$index)"
                                     inactive-color="#ff4949">
