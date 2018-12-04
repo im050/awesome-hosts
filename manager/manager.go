@@ -240,7 +240,7 @@ func (m *Manager) WriteHosts(name string, hosts Hosts) error {
 func (m *Manager) initGroupConfigIndex() {
 	m.GroupConfigIndex = make(map[string]*GroupConfig)
 	for i, _ := range m.Config.Groups {
-		c := &m.Config.Groups[i];
+		c := &m.Config.Groups[i]
 		m.GroupConfigIndex[c.Name] = c
 	}
 }
@@ -386,7 +386,7 @@ func (m *Manager) refreshGroupsConfig(groupName string) {
 	timestamp := GetNowTimestamp()
 	config := m.FindGroupConfig(groupName)
 	if config == nil {
-		return;
+		return
 	}
 	m.Config.LastUpdatedTimestamp = timestamp
 	config.LastUpdatedTimestamp = timestamp
@@ -446,6 +446,18 @@ func (m *Manager) SyncSystemHosts() bool {
 }
 
 func (m *Manager) SyncSystemHostsWin() bool {
+	file, err := os.Open(m.GetHostDir() + "/" + m.TempFileName)
+	if err != nil {
+		return false
+	}
+	content, err := ioutil.ReadAll(file)
+	if err != nil {
+		return false
+	}
+	err = ioutil.WriteFile(GetHostsFile(), content, 0644)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	return true
 }
 
@@ -458,10 +470,6 @@ func (m *Manager) AddGroup(name string, enabled bool, hosts string) bool {
 	return true
 }
 
-//
-//'Permission denied'
-//    , 'incorrect password'
-//    , 'Password:Sorry, try again.'
 func (m *Manager) SyncSystemHostsUnix() bool {
 	var (
 		output string
