@@ -145,7 +145,7 @@
                             @keyup.enter.native="addHost"
                             clearable>
                     </el-input>
-                    <el-button icon="el-icon-plus" @click="addHost" :disabled="system.isSystemHosts"
+                    <el-button icon="el-icon-plus" @click="addHost" :disabled="system.currentGroupName == system.defaultSystemHostsName"
                                :loading="loadingGroup.addHostLoading">Add
                     </el-button>
                     <el-button icon="el-icon-search">Search</el-button>

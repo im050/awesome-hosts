@@ -255,6 +255,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             message: message.message,
                             type: "error"
                         });
+                        this.loadingGroup.addHostLoading = false;
                         return;
                     }
                     this.system.currentHosts.push({
