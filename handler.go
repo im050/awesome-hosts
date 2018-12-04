@@ -1,15 +1,15 @@
 package main
 
 import (
+	"awesome-hosts/parameters"
 	"encoding/json"
-	"fmt"
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron-bootstrap"
 	"reflect"
 )
 
 type Handler struct {
-	Parameters *Parameters
+	Parameters *parameters.Parameters
 }
 
 type Response struct {
@@ -39,7 +39,6 @@ func (handler *Handler) handleMessages(w *astilectron.Window, messageIn bootstra
 	//call func
 	reflectVal := reflect.ValueOf(handler)
 	method := reflectVal.MethodByName(h.toFirstCharUpper(messageIn.Name) + "Handler")
-	fmt.Println(h.toFirstCharUpper(messageIn.Name) + "Handler")
 	if method.IsValid() {
 		retVal := method.Call(nil)
 		return retVal[0].Interface().(Response), nil

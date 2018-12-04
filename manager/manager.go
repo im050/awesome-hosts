@@ -347,7 +347,6 @@ func (m *Manager) syncStart() {
 					tmpHosts += str + GetLineSeparator() + GetLineSeparator()
 				}
 			}
-			fmt.Println("updated")
 			//check system hosts file content is the same as tmpHosts
 			if !m.needSync(tmpHosts) {
 				continue
@@ -360,7 +359,6 @@ func (m *Manager) syncStart() {
 			m.SystemHosts = m.explainHostsString(tmpHosts)
 			//refresh client system hosts list
 			m.SendMessage("updateSystemHosts", m.SystemHosts)
-			fmt.Println("sync hosts")
 		}
 	}()
 }

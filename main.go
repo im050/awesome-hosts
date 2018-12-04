@@ -2,6 +2,7 @@ package main
 
 import (
 	"awesome-hosts/manager"
+	"awesome-hosts/parameters"
 	"flag"
 	"github.com/asticode/go-astilectron"
 	"github.com/asticode/go-astilectron-bootstrap"
@@ -13,7 +14,7 @@ func main() {
 	//init manager instance
 	m = manager.New(manager.GetUserHome() + "/.awesohosts").Init()
 	handler := new(Handler)
-	handler.Parameters = new(Parameters)
+	handler.Parameters = parameters.New()
 	// Init
 	flag.Parse()
 	astilog.FlagInit()

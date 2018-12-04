@@ -1,12 +1,12 @@
-package main
+package parameters
 
 type Parameters struct {
 	data map[string]interface{}
 }
 
-func NewParameters() *Parameters {
-	m := new(Parameters)
-	return m
+func New() *Parameters {
+	p := new(Parameters)
+	return p
 }
 
 func (p *Parameters) From(data map[string]interface{}) {
