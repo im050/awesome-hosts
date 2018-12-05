@@ -15,7 +15,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
         // current group name
         currentGroupName: '',
         // table rows depended on this variable
-        currentHosts: [],// [{ip:"1", domain: "a", enabled: true}],
+        currentHosts: [], //[{ip:"1", domain: "a", enabled: true}],
         // put system hosts at here
         systemHosts: []
     };
@@ -310,6 +310,9 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     {groupName: groupName, ip: host.ip, domain: host.domain, enabled: host.enabled, index: index},
                     (message) => {
                         if (message.code !== 1) {
+                            host.ip = message.payload.ip;
+                            host.domain = message.payload.domain;
+                            host.enabled = message.payload.enabled;
                             this.$message({
                                 message: message.message,
                                 type: 'error'

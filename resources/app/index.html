@@ -75,14 +75,16 @@
                             label="IP"
                             width="240">
                         <template slot-scope="scope">
-                            <span :contenteditable="system.currentGroupName != system.defaultSystemHostsName" v-model="scope.row.ip" class="edit-column" @blur="changeHost($event, scope.$index)" slot="reference" >{{ scope.row.ip }}</span>
+                            <input @blur="changeHost($event, scope.$index)" v-if="system.currentGroupName != system.defaultSystemHostsName" class="edit-column" type="text" v-model="scope.row.ip" :value="scope.row.ip" />
+                            <span class="edit-column" v-else>{{ scope.row.ip }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column
                             label="Domain"
                     >
                         <template slot-scope="scope">
-                            <span :contenteditable="system.currentGroupName != system.defaultSystemHostsName" v-model="scope.row.domain" class="edit-column" @blur="changeHost($event, scope.$index)" slot="reference">{{ scope.row.domain }}</span>
+                            <input @blur="changeHost($event, scope.$index)" v-if="system.currentGroupName != system.defaultSystemHostsName" class="edit-column" type="text" v-model="scope.row.domain" :value="scope.row.domain" />
+                            <span class="edit-column" v-else>{{ scope.row.domain }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column

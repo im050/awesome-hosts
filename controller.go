@@ -44,22 +44,30 @@ func (handler *Handler) UpdateHostHandler() Response {
 	domain, _ := handler.Parameters.GetString("domain", "")
 	ip = strings.Trim(ip, " ")
 	domain = strings.Trim(domain, " ")
-	if err := m.CheckIP(ip); err != nil {
-		return Response{Code: 0, Message: err.Error()}
-	}
-	if err := m.CheckDomain(domain); err != nil {
-		return Response{Code: 0, Message: err.Error()}
-	}
+	enabled, _ := handler.Parameters.GetBool("enabled", false)
 	groupName, _ := handler.Parameters.GetString("groupName", "")
 	index, indexExists := handler.Parameters.GetInt("index")
-	if !indexExists {
-		return Response{Code: 0, Message: "An error occurred while an operation"}
+	group := m.FindGroup(groupName)
+	if group == nil || index > len(group.Hosts) - 1 {
+		return Response{Code:0, Message: "An error occurred while an operation"}
 	}
-	enabled, _ := handler.Parameters.GetBool("enabled", false)
+	host := group.Hosts[index]
+	if err := m.CheckIP(ip); err != nil {
+		return Response{Code: 0, Message: err.Error(), Payload: host}
+	}
+	if err := m.CheckDomain(domain); err != nil {
+		return Response{Code: 0, Message: err.Error(), Payload: host}
+	}
+	if !indexExists {
+		return Response{Code: 0, Message: "An error occurred while an operation", Payload: host}
+	}
+	if host.IP == ip && host.Domain == domain && host.Enabled == enabled {
+		return Response{Code: 1, Message: "success, nothing changed."}
+	}
 	if m.UpdateHost(groupName, index, ip, domain, enabled) {
 		return Response{Code: 1, Message: "success"}
 	} else {
-		return Response{Code: 0, Message: "An error occurred while an operation"}
+		return Response{Code: 0, Message: "An error occurred while an operation", Payload: host}
 	}
 }
 
