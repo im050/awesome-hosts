@@ -80,9 +80,9 @@ html, body, .framework, .framework>.row {
     box-sizing: border-box;
 }
 
-/*.el-table {*/
-    /*background: rgb(150, 166, 166);*/
-/*}*/
+.el-table {
+    transform:translateZ(0)
+}
 
 .el-table--border, .el-table--group {
     border: none;
@@ -125,6 +125,7 @@ td .edit-column {
 td .col-split {
     margin: 0 5px 0 5px;
 }
+
 td.el-table_1_column_4 i {
     cursor: pointer;
 }
