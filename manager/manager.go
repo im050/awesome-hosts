@@ -583,7 +583,7 @@ func (m *Manager) CheckIP(ip string) error {
 }
 
 func (m *Manager) CheckDomain(domain string) error {
-	pattern := `^[^\.]([A-Za-z])([A-Za-z\.\-\_0-9]+)[^.]$`
+	pattern := `^[^\.]([A-Za-z\.\-\_0-9]+)[^.]$`
 	if !regexp.MustCompile(pattern).MatchString(domain) {
 		return fmt.Errorf("Domain [%s] is illegal. ", domain)
 	}
