@@ -117,8 +117,9 @@ html, body, .framework, .framework>.row {
 td .edit-column {
     display: inline-block;
     width: 100%;
-    height: 100%;
+    padding: 0px;
     cursor: pointer;
+    outline: none;
 }
 
 td .col-split {

@@ -15,7 +15,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
         // current group name
         currentGroupName: '',
         // table rows depended on this variable
-        currentHosts: [],
+        currentHosts: [],// [{ip:"1", domain: "a", enabled: true}],
         // put system hosts at here
         systemHosts: []
     };
@@ -39,7 +39,6 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 inputHost: '',
             },
             hostGroups: [],
-
             system: system,
             ipPrepareList: [],
             createNewGroupDialog: false,

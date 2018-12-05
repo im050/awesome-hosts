@@ -53,7 +53,6 @@
                         :data="system.currentHosts.slice((page.currentPage - 1) * page.pageSize, page.currentPage * page.pageSize)"
                         v-loading="loadingGroup.hostsLoading"
                         stripe
-                        border
                         empty-text="No results"
                         height="100%"
                         style="width: 100%; ">
@@ -74,32 +73,16 @@
                     </el-table-column>
                     <el-table-column
                             label="IP"
-                            resizable="true"
                             width="240">
                         <template slot-scope="scope">
-                            <el-popover
-                                    placement="top"
-                                    width="200"
-                                    trigger="click">
-                                <el-input :disabled="system.isSystemHosts" @blur="changeHost($event, scope.$index)" v-model="scope.row.ip"
-                                          placeholder="ip"></el-input>
-                                <span class="edit-column" slot="reference">{{ scope.row.ip }}</span>
-                            </el-popover>
+                            <span :contenteditable="system.currentGroupName != system.defaultSystemHostsName" v-model="scope.row.ip" class="edit-column" @blur="changeHost($event, scope.$index)" slot="reference" >{{ scope.row.ip }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column
-                            resizable="true"
                             label="Domain"
                     >
                         <template slot-scope="scope">
-                            <el-popover
-                                    placement="top"
-                                    width="200"
-                                    trigger="click">
-                                <el-input :disabled="system.isSystemHosts" @blur="changeHost($event, scope.$index)" v-model="scope.row.domain"
-                                          placeholder="domain"></el-input>
-                                <span class="edit-column" slot="reference">{{ scope.row.domain }}</span>
-                            </el-popover>
+                            <span :contenteditable="system.currentGroupName != system.defaultSystemHostsName" v-model="scope.row.domain" class="edit-column" @blur="changeHost($event, scope.$index)" slot="reference">{{ scope.row.domain }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column
