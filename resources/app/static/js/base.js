@@ -29,7 +29,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             },
             loadingGroup: {
                 hostsLoading: false,
-                fullscreenLoading: true,
+                fullscreenLoading: false,
                 addHostLoading: false,
                 addGroupLoading: false,
                 changeGroupLoading: false,
@@ -38,6 +38,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 inputIp: '',
                 inputHost: '',
             },
+            selectionItemIndexes: [],
             hostGroups: [],
             system: system,
             ipPrepareList: [],
@@ -81,7 +82,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             },
             loadIpPrepareList() {
                 server.sendMessage("intranet", {}, (message) => {
-                    var data = [{value: "127.0.0.1"}];
+                    let data = [{value: "127.0.0.1"}];
                     let ip = message.payload;
                     if (ip !== "") {
                         data.push({value: ip})
@@ -210,7 +211,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 })
             },
             deleteGroup: function () {
-                this.$confirm('Would you wanna delete this group? This operation will not be restored.', 'Delete Group', {
+                this.$confirm('Do you want to delete this group? This operation cannot be restored.', 'Delete Group', {
                     confirmButtonText: 'Yes',
                     cancelButtonText: 'No',
                     type: 'warning'
@@ -336,6 +337,62 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             }
                         }
                     }
+                });
+            },
+            handleSelectionChange(rows) {
+                this.selectionItemIndexes = [];
+                rows.forEach((item) => {
+                    this.selectionItemIndexes.push(item.index)
+                });
+                console.log(this.selectionItemIndexes)
+            },
+            tableRowClassName(row) {
+                row.row.index = row.rowIndex;
+            },
+            deleteHosts: function() {
+                this.$confirm('Do you want to delete the selected hosts? This operation cannot be restored.', 'Delete', {
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    type: 'warning'
+                }).then(() => {
+                    let deleteIndexes = [];
+                    this.selectionItemIndexes.forEach((item) => {
+                        item = this.fixIndexOffset(item)
+                        deleteIndexes.push(item)
+                    });
+                    server.sendMessage("deleteHosts", {groupName: this.system.currentGroupName, indexes: deleteIndexes}, (message) => {
+                        this.$message({
+                            type: 'success',
+                            message: 'Successfully deleted'
+                        });
+                        for (let i in this.hostGroups) {
+                            let item = this.hostGroups[i];
+                            if (item.name === this.system.currentGroupName) {
+                                item.hosts = message.payload.hosts;
+                            }
+                        }
+                        this.system.currentHosts = message.payload.hosts;
+                    });
+
+                }).catch(() => {
+                    //nothing to do...
+                });
+            },
+            moveHosts: function() {
+                this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.$message({
+                        type: 'success',
+                        message: '删除成功!'
+                    });
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
                 });
             },
             //change group panel

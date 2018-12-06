@@ -21,6 +21,14 @@ func (p *Parameters) GetString(name string, args ...interface{}) (string, bool) 
 	return v.(string), true
 }
 
+func (p *Parameters) GetArray(name string, args ...interface{}) ([]interface{}, bool) {
+	v := p.Get(name, args).([]interface{})
+	if v == nil {
+		return v, false
+	}
+	return v, true
+}
+
 func (p *Parameters) GetInt(name string, args ...interface{}) (int, bool) {
 	v := p.Get(name, args)
 	if v == nil {

@@ -2,17 +2,28 @@ package main
 
 import (
 	"awesome-hosts/parameters"
+	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestParams(t *testing.T) {
 	p := parameters.New()
-	data := map[string]interface{}{
-		"world": "world",
-		"bool" : true,
+	payload := "{\"world\": \"world\", \"bool\":true, \"number\": [1,2,3]}"
+	var data map[string]interface{}
+	data = make(map[string]interface{})
+	if err := json.Unmarshal([]byte(payload), &data); err != nil {
+		t.Error("err")
 	}
+	//data := map[string]interface{}{
+	//	"world": "world",
+	//	"bool" : true,
+	//}
 	p.From(data)
+	number := p.Get("number", nil).([]interface{})
+	fmt.Println(number)
+
 	v1,_ := p.GetInt("testInt", 5)
 	v2,_ := p.GetString("hello", "hello")
 	v3, e1 := p.GetString("world", "memory")

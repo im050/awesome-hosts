@@ -149,8 +149,33 @@ func (handler *Handler) DeleteHostHandler() Response {
 	index, _ := handler.Parameters.GetInt("index", -1)
 	groupName, _ := handler.Parameters.GetString("groupName", "")
 	if index == -1 {
-		return Response{Code: 0, Message: "Lost some parameters"}
+		return Response{Code: 0, Message: "Parameters was wrong"}
+	}
+	if groupName == "" {
+		return Response{Code: 0, Message: "Parameters was wrong"}
 	}
 	m.DeleteHost(groupName, index)
 	return Response{Code: 1, Message: "success"}
+}
+
+func (handler *Handler) DeleteHostsHandler() Response {
+	indexes, _ := handler.Parameters.GetArray("indexes", nil)
+	if indexes == nil {
+		return Response{Code: 0, Message: "Parameters was wrong"}
+	}
+	groupName, _ := handler.Parameters.GetString("groupName", "")
+	if groupName == "" {
+		return Response{Code: 0, Message: "Parameters was wrong"}
+	}
+	group := m.FindGroup(groupName)
+	if group == nil {
+		return Response{Code: 0, Message: "Nonexistent group"}
+	}
+	var ids []int
+	for _,  i := range indexes {
+		index := int(i.(float64))
+		ids = append(ids, index)
+	}
+	m.DeleteHostsByGroup(group, ids)
+	return Response{Code: 1, Message: "success", Payload: group}
 }

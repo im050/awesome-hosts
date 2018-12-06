@@ -27,6 +27,15 @@ html, body, .framework, .framework>.row {
 .el-pagination {
     position: absolute;
     bottom: 0;
+    right: 0;
+    background: #fff;
+    padding: 5px 20px;
+}
+
+.batch-panel {
+    position: absolute;
+    left: 0;
+    bottom: 0;
     background: #fff;
     padding: 5px 20px;
 }
