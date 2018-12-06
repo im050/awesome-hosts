@@ -5,7 +5,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
     console.log("sendMessage:", name, payload);
     // send a message to Go
     astilectron.sendMessage({name: name, payload: payload}, function (message) {
-        console.log("response:", message);
+        console.log("response:", name, message);
         callback(message.payload)
     });
 };
@@ -524,6 +524,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 this.loadIpPrepareList();
                 //listen the message from backend
                 astilectron.onMessage((message) => {
+                    console.log("receive message: ", message.name, message);
                     switch (message.name) {
                         case 'needPassword':
                             this.needPassword(message.payload);

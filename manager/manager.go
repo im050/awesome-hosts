@@ -487,7 +487,7 @@ func (m *Manager) AddGroup(name string, enabled bool, hosts string) bool {
 func (m *Manager) AddRemoteGroup(name string, enabled bool, groupType string, url string) bool {
 	timestamp := GetNowTimestamp()
 	m.addGroupToConfig(name, enabled, timestamp, timestamp, groupType, url)
-	group := Group{Name: name, Enabled: enabled}
+	group := Group{Name: name, Enabled: enabled, GroupConfig:m.FindGroupConfig(name)}
 	m.Groups = append(m.Groups, group)
 	m.Config.LastUpdatedTimestamp = timestamp
 	//enable a goroutine to get remote hosts
@@ -505,7 +505,6 @@ func (m *Manager) RefreshRemoteHosts(name string) {
 			Hosts     Hosts  `json:"hosts"`
 		}
 		lastGroup := m.FindGroup(name)
-		fmt.Println(lastGroup)
 		bootstrap.SendMessage(m.Window, "updateHosts", res{GroupName: name, Hosts: lastGroup.Hosts})
 	}
 }
