@@ -24,6 +24,13 @@ func TestPattern(t *testing.T) {
 	assert.NoError(t, m.CheckGroupName("Good boy"))
 }
 
+func TestRemoveRepeat(t *testing.T) {
+	iSlc := []int{1,2,3,4,4,5,6,7,8,8,9}
+	rSlc := manager.RemoveRepeatNumber(iSlc)
+	expected := []int{1,2,3,4,5,6,7,8,9}
+	assert.Equal(t, expected, rSlc)
+}
+
 func BenchmarkCheckIP(b *testing.B) {
 	m := manager.New("")
 	for i := 0; i < b.N; i++ {

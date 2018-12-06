@@ -629,6 +629,18 @@ func (m *Manager) DeleteHost(groupName string, index int) {
 	m.Config.LastUpdatedTimestamp = GetNowTimestamp()
 }
 
+func (m *Manager) DeleteHostsByGroup(group *Group, indexes []int) {
+	indexes = RemoveRepeatNumber(indexes)
+	sort.SliceStable(indexes, func(i, j int) bool {
+		return indexes[i] < indexes[j]
+	})
+	for i, index := range indexes {
+		index -= i
+		group.Hosts = append(group.Hosts[:index], group.Hosts[index+1:]...)
+	}
+	m.Config.LastUpdatedTimestamp = GetNowTimestamp()
+}
+
 func (m *Manager) CheckIP(ip string) error {
 	IPv4Pattern := `((2[0-4]\d|25[0-5]|[01]?\d\d?)\.){3}(2[0-4]\d|25[0-5]|[01]?\d\d?)`
 	IPv6Pattern := `([a-f0-9]{1,4}(:[a-f0-9]{1,4}){7}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){0,7}::[a-f0-9]{0,4}(:[a-f0-9]{1,4}){0,7})`

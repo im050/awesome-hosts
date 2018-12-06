@@ -51,12 +51,22 @@
             </el-header>
             <el-main>
                 <el-table
+                        ref="multipleTable"
                         :data="system.currentHosts.slice((page.currentPage - 1) * page.pageSize, page.currentPage * page.pageSize)"
                         v-loading="loadingGroup.hostsLoading"
                         stripe
                         empty-text="No results"
+                        tooltip-effect="dark"
+                        show-overflow-tooltip
+                        :row-class-name="tableRowClassName"
+                        @selection-change="handleSelectionChange"
                         height="100%"
                         style="width: 100%; ">
+                    <el-table-column
+                            type="selection"
+                            align="center"
+                            width="55">
+                    </el-table-column>
                     <el-table-column
                             label="Enable"
                             width="80"
@@ -108,12 +118,17 @@
                         class="unselectable"
                         background
                         :page-size="page.pageSize"
+                        :pager-count="5"
                         layout="slot, prev, pager, next"
                         @current-change="handleCurrentChange"
                         :total="this.system.currentHosts.length">
                     <span class="el-pagination__total">Total {{ system.currentHosts.length }} items </span>
 
                 </el-pagination>
+                <div class="batch-panel">
+                    <el-button size="mini" icon="el-icon-delete" @click="deleteHosts()" :disabled="system.currentGroupName == system.defaultSystemHostsName">Delete</el-button>
+                    <el-button size="mini" icon="el-icon-rank" :disabled="system.currentGroupName == system.defaultSystemHostsName">Move</el-button>
+                </div>
                 <!-- pagination end -->
             </el-main>
             <el-footer class="unselectable">

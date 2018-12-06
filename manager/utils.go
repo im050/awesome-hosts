@@ -113,3 +113,15 @@ func ShellCommand(cmdStr string) (string, error) {
 	}
 	return out.String(), nil
 }
+
+func RemoveRepeatNumber(items []int) []int {
+	result := make([]int, 0)
+	existsMap := map[int]byte{}
+	for _, item := range items {
+		if _, ok := existsMap[item]; !ok {
+			result = append(result, item)
+			existsMap[item] = 0
+		}
+	}
+	return result
+}
