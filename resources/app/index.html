@@ -45,6 +45,11 @@
                 <div class="group-controller" v-if="system.currentGroupName != system.defaultSystemHostsName">
                     <el-button-group>
                         <el-button type="gray" icon="el-icon-edit" @click="openChangeGroupDialog"></el-button>
+                        <template v-if="system.currentGroupConfig.type == 'remote'">
+                            <el-tooltip content="Update hosts from remote" placement="top">
+                            <el-button type="gray" :loading="loadingGroup.refreshRemoteLoading[system.currentGroupName]" icon="el-icon-refresh" @click="refreshRemoteGroup"></el-button>
+                            </el-tooltip>
+                        </template>
                         <el-button type="gray" icon="el-icon-delete" @click="deleteGroup"></el-button>
                     </el-button-group>
                 </div>

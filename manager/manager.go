@@ -31,20 +31,21 @@ type Hosts []Host //line=>number
 type Groups []Group
 
 type Group struct {
-	Name      string `json:"name"`
-	Enabled   bool   `json:"enabled"`
-	Active    bool   `json:"active"`
-	Hosts     Hosts  `json:"hosts"`
-	CreatedAt int64  `json:"createAt"`
+	Name        string       `json:"name"`
+	Enabled     bool         `json:"enabled"`
+	Active      bool         `json:"active"` //it means current group in the webview
+	Hosts       Hosts        `json:"hosts"`
+	CreatedAt   int64        `json:"createAt"`
+	GroupConfig *GroupConfig `json:"groupConfig"`
 }
 
 type GroupConfig struct {
-	Name                 string
-	Enabled              bool
-	LastUpdatedTimestamp int64
-	CreatedTimestamp     int64
-	Type                 string
-	Url                  string
+	Name                 string `json:"name"`
+	Enabled              bool   `json:"enabled"`
+	LastUpdatedTimestamp int64  `json:"lastUpdateTimestamp"`
+	CreatedTimestamp     int64  `json:"createdTimestamp"`
+	Type                 string `json:"type"`
+	Url                  string `json:"url"`
 }
 
 type Config struct {
@@ -264,7 +265,8 @@ func (m *Manager) GetGroups() []Group {
 			continue
 		}
 		hosts := m.GetHosts(file)
-		groups = append(groups, Group{Name: item.Name, Enabled: item.Enabled, CreatedAt: item.CreatedTimestamp, Hosts: hosts})
+		groupConfig := m.FindGroupConfig(item.Name)
+		groups = append(groups, Group{Name: item.Name, Enabled: item.Enabled, CreatedAt: item.CreatedTimestamp, Hosts: hosts, GroupConfig: groupConfig})
 		if err := file.Close(); err != nil {
 			panic(err)
 		}
@@ -476,7 +478,7 @@ func (m *Manager) SyncSystemHostsWin() bool {
 func (m *Manager) AddGroup(name string, enabled bool, hosts string) bool {
 	timestamp := GetNowTimestamp()
 	m.addGroupToConfig(name, enabled, timestamp, timestamp, "local", "")
-	group := Group{Name: name, Enabled: enabled, Hosts: m.explainHostsString(hosts)}
+	group := Group{Name: name, Enabled: enabled, Hosts: m.explainHostsString(hosts), GroupConfig: m.FindGroupConfig(name)}
 	m.Groups = append(m.Groups, group)
 	m.Config.LastUpdatedTimestamp = timestamp
 	return true
@@ -490,18 +492,22 @@ func (m *Manager) AddRemoteGroup(name string, enabled bool, groupType string, ur
 	m.Config.LastUpdatedTimestamp = timestamp
 	//enable a goroutine to get remote hosts
 	go func() {
-		if m.GetRemoteHosts(name) {
-			m.Config.LastUpdatedTimestamp = GetNowTimestamp()
-			type res struct {
-				GroupName string `json:"name"`
-				Hosts     Hosts  `json:"hosts"`
-			}
-			lastGroup := m.FindGroup(name)
-			fmt.Println(lastGroup)
-			bootstrap.SendMessage(m.Window, "updateHosts", res{GroupName: name, Hosts: lastGroup.Hosts})
-		}
+		m.RefreshRemoteHosts(name)
 	}()
 	return true
+}
+
+func (m *Manager) RefreshRemoteHosts(name string) {
+	if m.GetRemoteHosts(name) {
+		m.Config.LastUpdatedTimestamp = GetNowTimestamp()
+		type res struct {
+			GroupName string `json:"name"`
+			Hosts     Hosts  `json:"hosts"`
+		}
+		lastGroup := m.FindGroup(name)
+		fmt.Println(lastGroup)
+		bootstrap.SendMessage(m.Window, "updateHosts", res{GroupName: name, Hosts: lastGroup.Hosts})
+	}
 }
 
 func (m *Manager) GetRemoteHosts(groupName string) bool {

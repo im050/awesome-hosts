@@ -181,10 +181,25 @@ func (handler *Handler) DeleteHostsHandler() Response {
 		return Response{Code: 0, Message: "Nonexistent group"}
 	}
 	var ids []int
-	for _,  i := range indexes {
+	for _, i := range indexes {
 		index := int(i.(float64))
 		ids = append(ids, index)
 	}
 	m.DeleteHostsByGroup(group, ids)
 	return Response{Code: 1, Message: "success", Payload: group}
+}
+
+func (handler *Handler) RefreshRemoteGroupHandler() Response {
+	name, _ := handler.Parameters.GetString("groupName", "")
+	if name == "" {
+		return Response{Code: 0, Message: "Parameters was wrong"}
+	}
+	groupConfig := m.FindGroupConfig(name)
+	if groupConfig.Type != "remote" {
+		return Response{Code: 0, Message: "Parameters was wrong"}
+	}
+	go func() {
+		m.RefreshRemoteHosts(name)
+	}()
+	return Response{Code: 1, Message: "success"}
 }

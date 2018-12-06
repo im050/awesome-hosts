@@ -15,6 +15,8 @@ Server.prototype.sendMessage = function (name, payload, callback) {
         defaultSystemHostsName: "System Hosts",
         // current group name
         currentGroupName: '',
+        // current group config
+        currentGroupConfig: {},
         // table rows depended on this variable
         currentHosts: [], //[{ip:"1", domain: "a", enabled: true}],
         // put system hosts at here
@@ -34,6 +36,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 addHostLoading: false,
                 addGroupLoading: false,
                 changeGroupLoading: false,
+                refreshRemoteLoading: {}
             },
             addHostForm: {
                 inputIp: '',
@@ -286,19 +289,18 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             },
             //init, load System hosts and Groups
             init: function () {
-                let _this = this;
                 Promise.all([this.getList(this.system.defaultSystemHostsName), this.getHostGroups()]).then((results) => {
-                    _this.hostGroups[0].active = true;
-                    _this.system.currentGroupName = _this.hostGroups[0].name;
+                    this.hostGroups[0].active = true;
+                    this.system.currentGroupName = this.hostGroups[0].name;
                     setTimeout(() => {
-                        _this.loadingGroup.fullscreenLoading = false;
+                        this.loadingGroup.fullscreenLoading = false;
                     }, 500);
                 }).catch(results => {
                     this.$message({
                         message: 'An error occurred while your operating',
                         type: 'error'
                     });
-                    console.log(results)
+                    console.log(results);
                 });
             },
             //fix rows index with page
@@ -359,7 +361,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
             tableRowClassName(row) {
                 row.row.index = row.rowIndex;
             },
-            deleteHosts: function() {
+            deleteHosts: function () {
                 this.$confirm('Do you want to delete the selected hosts? This operation cannot be restored.', 'Delete', {
                     confirmButtonText: 'Yes',
                     cancelButtonText: 'No',
@@ -370,7 +372,10 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         item = this.fixIndexOffset(item)
                         deleteIndexes.push(item)
                     });
-                    server.sendMessage("deleteHosts", {groupName: this.system.currentGroupName, indexes: deleteIndexes}, (message) => {
+                    server.sendMessage("deleteHosts", {
+                        groupName: this.system.currentGroupName,
+                        indexes: deleteIndexes
+                    }, (message) => {
                         this.$message({
                             type: 'success',
                             message: 'Successfully deleted'
@@ -388,7 +393,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     //nothing to do...
                 });
             },
-            moveHosts: function() {
+            moveHosts: function () {
                 this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
@@ -405,8 +410,24 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     });
                 });
             },
+            refreshRemoteGroup: function () {
+                this.$set(this.loadingGroup.refreshRemoteLoading,this.system.currentGroupName, true);
+
+                server.sendMessage("refreshRemoteGroup", {groupName: this.system.currentGroupName}, (message) => {
+                    if (message.code !== 1) {
+                        this.$message({
+                            type: 'error',
+                            message: message.message
+                        });
+                    }
+                })
+            },
             //change group panel
             selectGroup: function (groupName) {
+                if (!this.loadingGroup.refreshRemoteLoading.hasOwnProperty(groupName)) {
+                    //add the loading key to vue monitor
+                    this.$set(this.loadingGroup.refreshRemoteLoading,groupName, false);
+                }
                 this.page.currentPage = 1;
                 this.loadingGroup.hostsLoading = true;
                 for (let i in this.hostGroups) {
@@ -415,11 +436,15 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                         item.active = true;
                         if (groupName === this.system.defaultSystemHostsName) {
                             this.system.currentHosts = this.system.systemHosts;
+                            this.system.currentGroupConfig = {
+                                type: 'local'
+                            }
                         } else {
                             if (item.hosts === null) {
                                 this.hostGroups[i].hosts = []
                             }
                             this.system.currentHosts = item.hosts;
+                            this.system.currentGroupConfig = item.groupConfig;
                         }
                         this.system.currentGroupName = item.name;
                     } else {
@@ -491,7 +516,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 });
             }
         },
-        mounted() {
+        created() {
             document.addEventListener('astilectron-ready', () => {
                 //init
                 this.init();
@@ -499,7 +524,6 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 this.loadIpPrepareList();
                 //listen the message from backend
                 astilectron.onMessage((message) => {
-                    console.log("receive message:", message);
                     switch (message.name) {
                         case 'needPassword':
                             this.needPassword(message.payload);
@@ -523,8 +547,9 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             }
                             this.$notify.success({
                                 title: 'Success',
-                                message: '['+groupName+'] Group hosts have been updated.'
+                                message: '[' + groupName + '] Group hosts have been updated.'
                             });
+                            this.loadingGroup.refreshRemoteLoading[groupName] = false;
                     }
                 });
             })
