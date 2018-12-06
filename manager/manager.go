@@ -580,7 +580,6 @@ func (m *Manager) DeleteHostsByGroup(group *Group, indexes []int) {
 	})
 	for i, index := range indexes {
 		index -= i
-		fmt.Println("delete: " + group.Hosts[index].Domain)
 		group.Hosts = append(group.Hosts[:index], group.Hosts[index+1:]...)
 	}
 	m.Config.LastUpdatedTimestamp = GetNowTimestamp()
