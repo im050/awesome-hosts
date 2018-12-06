@@ -2,9 +2,10 @@ let Server = function () {
 };
 
 Server.prototype.sendMessage = function (name, payload, callback) {
+    console.log("sendMessage:", name, payload);
     // send a message to Go
     astilectron.sendMessage({name: name, payload: payload}, function (message) {
-        console.log(message);
+        console.log("response:", message);
         callback(message.payload)
     });
 };
@@ -96,7 +97,9 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 this.newGroupForm.data = {
                     name: '',
                     hosts: '',
-                    enabled: true
+                    enabled: true,
+                    type: 'local',
+                    url: ''
                 };
                 return this;
             },
@@ -116,6 +119,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 }
                 server.sendMessage("addGroup", this.newGroupForm.data, (message) => {
                     let groupName = this.newGroupForm.data.name;
+                    let type = this.newGroupForm.data.type;
                     if (message.code === 1) {
                         this.clearNewGroupForm().closeNewGroupDialog();
                         this.hostGroups = message.payload;
@@ -123,8 +127,12 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             name: this.system.defaultSystemHostsName,
                             active: false,
                         });
+                        let tipMessage = `[${groupName}] Successfully added`;
+                        if (type === 'remote') {
+                            tipMessage = `[${groupName}] Getting remote host data, it will take a while.`
+                        }
                         this.$message({
-                            message: `[${groupName}] Successfully added`,
+                            message: tipMessage,
                             type: 'success'
                         });
                     } else {
@@ -491,6 +499,7 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                 this.loadIpPrepareList();
                 //listen the message from backend
                 astilectron.onMessage((message) => {
+                    console.log("receive message:", message);
                     switch (message.name) {
                         case 'needPassword':
                             this.needPassword(message.payload);
@@ -502,16 +511,20 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                             }
                             break;
                         case 'updateHosts':
-                            let groupName = message.payload.groupName
+                            let groupName = message.payload.name;
                             if (this.system.currentGroupName === groupName) {
                                 this.system.currentHosts = message.payload.hosts
                             }
                             for (let i in this.hostGroups) {
                                 let group = this.hostGroups[i];
                                 if (group.name === groupName) {
-                                    group.hosts = message.payload.hosts
+                                    this.hostGroups[i].hosts = message.payload.hosts
                                 }
                             }
+                            this.$notify.success({
+                                title: 'Success',
+                                message: '['+groupName+'] Group hosts have been updated.'
+                            });
                     }
                 });
             })

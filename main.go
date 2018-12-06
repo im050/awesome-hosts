@@ -32,6 +32,7 @@ func main() {
 		RestoreAssets: RestoreAssets,
 		OnWait: func(_ *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
 			m.Window = ws[0]
+			m.Window.OpenDevTools()
 			return nil
 		},
 		Windows: []*bootstrap.Window{{
