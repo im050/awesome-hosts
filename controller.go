@@ -48,8 +48,8 @@ func (handler *Handler) UpdateHostHandler() Response {
 	groupName, _ := handler.Parameters.GetString("groupName", "")
 	index, indexExists := handler.Parameters.GetInt("index")
 	group := m.FindGroup(groupName)
-	if group == nil || index > len(group.Hosts) - 1 {
-		return Response{Code:0, Message: "An error occurred while an operation"}
+	if group == nil || index > len(group.Hosts)-1 {
+		return Response{Code: 0, Message: "An error occurred while an operation"}
 	}
 	host := group.Hosts[index]
 	if err := m.CheckIP(ip); err != nil {
@@ -97,6 +97,8 @@ func (handler *Handler) AddGroupHandler() Response {
 	groupName, _ := handler.Parameters.GetString("name", "")
 	enabled, _ := handler.Parameters.GetBool("enabled", false)
 	hosts, _ := handler.Parameters.GetString("hosts", "")
+	groupType, _ := handler.Parameters.GetString("type", "local")
+	url, _ := handler.Parameters.GetString("url", "")
 	if groupName == "" {
 		return Response{Code: 0, Message: "Group name cannot be empty"}
 	}
@@ -106,11 +108,18 @@ func (handler *Handler) AddGroupHandler() Response {
 	if m.FindGroup(groupName) != nil {
 		return Response{Code: 0, Message: "Group already exists"}
 	}
-	if m.AddGroup(groupName, enabled, hosts) {
+	addResult := false
+	if groupType == "local" {
+		addResult = m.AddGroup(groupName, enabled, hosts)
+	} else {
+		addResult = m.AddRemoteGroup(groupName, enabled, groupType, url)
+	}
+	if addResult {
 		return Response{Code: 1, Message: "success", Payload: m.Groups}
 	} else {
 		return Response{Code: 1, Message: "An error occurred while an operation"}
 	}
+
 }
 
 func (handler *Handler) ChangeGroupHandler() Response {

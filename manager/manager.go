@@ -2,6 +2,7 @@ package manager
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"runtime"
@@ -41,6 +43,8 @@ type GroupConfig struct {
 	Enabled              bool
 	LastUpdatedTimestamp int64
 	CreatedTimestamp     int64
+	Type                 string
+	Url                  string
 }
 
 type Config struct {
@@ -133,7 +137,7 @@ func (m *Manager) loadConfig() {
 		m.loadConfigFromFile()
 	} else {
 		m.Config = Config{
-			Groups:               []GroupConfig{{Name: m.DefaultGroupName, Enabled: true, LastUpdatedTimestamp: 0, CreatedTimestamp: GetNowTimestamp()}},
+			Groups:               []GroupConfig{{Name: m.DefaultGroupName, Enabled: true, LastUpdatedTimestamp: 0, CreatedTimestamp: GetNowTimestamp(), Type: "local", Url: ""}},
 			LastUpdatedTimestamp: 0,
 			LastSyncTimestamp:    0,
 			InstalledTimestamp:   0,
@@ -155,6 +159,12 @@ func (m *Manager) loadConfigFromFile() {
 	fileByte, err := ioutil.ReadFile(m.hostsDir + "/" + m.ConfigFileName)
 	ErrorAndExitWithLog(err)
 	ErrorAndExitWithLog(json.Unmarshal(fileByte, &m.Config))
+	for i, _ := range m.Config.Groups {
+		group := &m.Config.Groups[i]
+		if group.Type == "" {
+			group.Type = "local"
+		}
+	}
 }
 
 func (m *Manager) GetHosts(file *os.File) Hosts {
@@ -427,12 +437,14 @@ func (m *Manager) persistConfig() {
 	ErrorAndExitWithLog(err)
 }
 
-func (m *Manager) addGroupToConfig(groupName string, enabled bool, lastUpdatedTimestamp int64, createdTimestamp int64) {
+func (m *Manager) addGroupToConfig(groupName string, enabled bool, lastUpdatedTimestamp int64, createdTimestamp int64, groupType string, url string) {
 	m.Config.Groups = append(m.Config.Groups, GroupConfig{
 		Name:                 groupName,
 		Enabled:              enabled,
 		LastUpdatedTimestamp: lastUpdatedTimestamp,
 		CreatedTimestamp:     createdTimestamp,
+		Type:                 groupType,
+		Url:                  url,
 	})
 	m.GroupConfigIndex[groupName] = &m.Config.Groups[len(m.Config.Groups)-1]
 }
@@ -463,10 +475,54 @@ func (m *Manager) SyncSystemHostsWin() bool {
 
 func (m *Manager) AddGroup(name string, enabled bool, hosts string) bool {
 	timestamp := GetNowTimestamp()
-	m.addGroupToConfig(name, enabled, timestamp, timestamp)
+	m.addGroupToConfig(name, enabled, timestamp, timestamp, "local", "")
 	group := Group{Name: name, Enabled: enabled, Hosts: m.explainHostsString(hosts)}
 	m.Groups = append(m.Groups, group)
 	m.Config.LastUpdatedTimestamp = timestamp
+	return true
+}
+
+func (m *Manager) AddRemoteGroup(name string, enabled bool, groupType string, url string) bool {
+	timestamp := GetNowTimestamp()
+	m.addGroupToConfig(name, enabled, timestamp, timestamp, groupType, url)
+	group := Group{Name: name, Enabled: enabled}
+	m.Groups = append(m.Groups, group)
+	m.Config.LastUpdatedTimestamp = timestamp
+	//enable a goroutine to get remote hosts
+	go func() {
+		if m.GetRemoteHosts(name) {
+			m.Config.LastUpdatedTimestamp = GetNowTimestamp()
+			type res struct {
+				GroupName string `json:"name"`
+				Hosts     Hosts  `json:"hosts"`
+			}
+			lastGroup := m.FindGroup(name)
+			fmt.Println(lastGroup)
+			bootstrap.SendMessage(m.Window, "updateHosts", res{GroupName: name, Hosts: lastGroup.Hosts})
+		}
+	}()
+	return true
+}
+
+func (m *Manager) GetRemoteHosts(groupName string) bool {
+	groupConfig := m.FindGroupConfig(groupName)
+	client := &http.Client{}
+	url := groupConfig.Url
+	if strings.Trim(url, " ") == "" {
+		return false
+	}
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+	response, _ := client.Do(request)
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(response.Body); err != nil {
+		return false
+	}
+	content := buf.String()
+	group := m.FindGroup(groupName)
+	group.Hosts = m.explainHostsString(content)
 	return true
 }
 

@@ -40,7 +40,8 @@
         </el-aside>
         <el-container>
             <el-header class="unselectable">
-                <h4>{{ system.currentGroupName }}</h4><i class=" el-icon-fa-lock" v-if="system.currentGroupName == system.defaultSystemHostsName"></i>
+                <h4>{{ system.currentGroupName }}</h4><i class=" el-icon-fa-lock"
+                                                         v-if="system.currentGroupName == system.defaultSystemHostsName"></i>
                 <div class="group-controller" v-if="system.currentGroupName != system.defaultSystemHostsName">
                     <el-button-group>
                         <el-button type="gray" icon="el-icon-edit" @click="openChangeGroupDialog"></el-button>
@@ -75,7 +76,9 @@
                             label="IP"
                             width="240">
                         <template slot-scope="scope">
-                            <input @blur="changeHost($event, scope.$index)" v-if="system.currentGroupName != system.defaultSystemHostsName" class="edit-column" type="text" v-model="scope.row.ip" :value="scope.row.ip" />
+                            <input @blur="changeHost($event, scope.$index)"
+                                   v-if="system.currentGroupName != system.defaultSystemHostsName" class="edit-column"
+                                   type="text" v-model="scope.row.ip" :value="scope.row.ip"/>
                             <span class="edit-column" v-else>{{ scope.row.ip }}</span>
                         </template>
                     </el-table-column>
@@ -83,7 +86,9 @@
                             label="Domain"
                     >
                         <template slot-scope="scope">
-                            <input @blur="changeHost($event, scope.$index)" v-if="system.currentGroupName != system.defaultSystemHostsName" class="edit-column" type="text" v-model="scope.row.domain" :value="scope.row.domain" />
+                            <input @blur="changeHost($event, scope.$index)"
+                                   v-if="system.currentGroupName != system.defaultSystemHostsName" class="edit-column"
+                                   type="text" v-model="scope.row.domain" :value="scope.row.domain"/>
                             <span class="edit-column" v-else>{{ scope.row.domain }}</span>
                         </template>
                     </el-table-column>
@@ -106,7 +111,7 @@
                         layout="slot, prev, pager, next"
                         @current-change="handleCurrentChange"
                         :total="this.system.currentHosts.length">
-                        <span  class="el-pagination__total">Total {{ system.currentHosts.length }} items </span>
+                    <span class="el-pagination__total">Total {{ system.currentHosts.length }} items </span>
 
                 </el-pagination>
                 <!-- pagination end -->
@@ -130,7 +135,8 @@
                             @keyup.enter.native="addHost"
                             clearable>
                     </el-input>
-                    <el-button icon="el-icon-plus" @click="addHost" :disabled="system.currentGroupName == system.defaultSystemHostsName"
+                    <el-button icon="el-icon-plus" @click="addHost"
+                               :disabled="system.currentGroupName == system.defaultSystemHostsName"
                                :loading="loadingGroup.addHostLoading">Add
                     </el-button>
                     <el-button icon="el-icon-search">Search</el-button>
@@ -138,28 +144,38 @@
             </el-footer>
         </el-container>
     </el-container>
+    <!-- new group dialog-->
     <el-dialog title="New Group" :visible.sync="createNewGroupDialog">
         <el-form :model="newGroupForm.data" @submit.native.prevent>
             <el-form-item label="Name" :label-width="newGroupForm.width">
                 <el-input v-model="newGroupForm.data.name" autocomplete="off"></el-input>
             </el-form-item>
-            <el-form-item label="Hosts" :label-width="newGroupForm.width">
+            <el-form-item label="" :label-width="newGroupForm.width">
+                <el-radio-group v-model="newGroupForm.data.type" size="small">
+                    <el-radio-button label="local">Local</el-radio-button>
+                    <el-radio-button label="remote">Remote</el-radio-button>
+                </el-radio-group>
+                <i class="el-icon-question"></i>
+            </el-form-item>
+            <el-form-item v-if="newGroupForm.data.type == 'local'" label="Hosts" :label-width="newGroupForm.width">
                 <el-input
                         type="textarea"
                         :autosize="{ minRows: 2, maxRows: 4}"
                         placeholder="Your hosts enter here line by line, just like the hosts file."
                         v-model="newGroupForm.data.hosts">
                 </el-input>
-                <span></span>
             </el-form-item>
-            <el-form-item :label-width="newGroupForm.width">
+            <el-form-item v-if="newGroupForm.data.type == 'local'" :label-width="newGroupForm.width">
                 <el-upload
-                    action="#"
-                    :show-file-list="false"
-                    :http-request="importHosts"
+                        action="#"
+                        :show-file-list="false"
+                        :http-request="importHosts"
                 >
                     <el-button size="small">Import</el-button>
                 </el-upload>
+            </el-form-item>
+            <el-form-item v-if="newGroupForm.data.type == 'remote'" label="Url" :label-width="newGroupForm.width">
+                <el-input v-model="newGroupForm.data.url" autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="Enabled" :label-width="newGroupForm.width">
                 <el-switch
@@ -177,7 +193,8 @@
     <el-dialog title="Change Group" :visible.sync="changeGroupDialog">
         <el-form :model="changeGroupForm.data" @submit.native.prevent>
             <el-form-item label="Name" :label-width="changeGroupForm.width">
-                <el-input v-model="changeGroupForm.data.name" @keyup.enter.native="changeGroup" autocomplete="off"></el-input>
+                <el-input v-model="changeGroupForm.data.name" @keyup.enter.native="changeGroup"
+                          autocomplete="off"></el-input>
             </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">

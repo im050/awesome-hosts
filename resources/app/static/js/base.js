@@ -48,6 +48,8 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                     name: '',
                     hosts: '',
                     enabled: true,
+                    type: 'local',
+                    url: ''
                 },
                 width: '80px'
             },
@@ -442,6 +444,17 @@ Server.prototype.sendMessage = function (name, payload, callback) {
                                 this.system.systemHosts = []
                             }
                             break;
+                        case 'updateHosts':
+                            let groupName = message.payload.groupName
+                            if (this.system.currentGroupName === groupName) {
+                                this.system.currentHosts = message.payload.hosts
+                            }
+                            for (let i in this.hostGroups) {
+                                let group = this.hostGroups[i];
+                                if (group.name === groupName) {
+                                    group.hosts = message.payload.hosts
+                                }
+                            }
                     }
                 });
             })
